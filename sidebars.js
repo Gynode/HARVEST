@@ -28,4 +28,13 @@ const sidebars = {
    */
 };
 
-module.exports = sidebars;
+/* module.exports = sidebars; */
+
+module.exports = {
+  tutorialSidebar: [
+    'introduction',
+    'how-to-participate',
+    'whitepaper'
+  ]
+};
+

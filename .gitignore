@@ -18,3 +18,32 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# ---------------------------------------------------------------------------
+# HARVEST project additions
+# ---------------------------------------------------------------------------
+
+# Python (the DAO contracts and prototypes are stdlib-only, but demo runs and
+# any future venv should stay out of the repo)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# The `/node_modules` rule above is anchored to the repo root; the DAO interface
+# under blockchain/ has its own node_modules.
+node_modules/
+
+# Site trees kept out of this repo:
+#   website/ is a *separate git repository* (Gynode/HARVEST-Docusaurus-Site) and a
+#   built site, not source. Committing it here would create a gitlink with no
+#   .gitmodules. manus-website-update_node_handler_rewards/ is another build of
+#   the same site. Neither is tracked until the site question is decided —
+#   see AGENTS.md, "Contradictions and open decisions".
+website/
+manus-website-update_node_handler_rewards/
+
+# Archives (source material is tracked unzipped under blockchain/)
+*.zip

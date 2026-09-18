@@ -33,6 +33,8 @@ anything else here.**
 
 Two things follow from that, and they matter:
 
-- **HRV has no value today.** The DAO treasury is unfunded.
+- **HRV has no value today.** The DAO treasury is unfunded, and no price or sale is offered.
+- **The amount of HRV in circulation is being confirmed.** Two wallets holding HRV were lost after the mint.
+  See [The HRV token](/docs/hrv-token) for what that does and does not mean.
 - **Nothing on this site is an offer, a price, or financial advice.** HARVEST is an early-stage project being
   built in the open.

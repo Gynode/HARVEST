@@ -113,10 +113,10 @@ the exception — it is a genuine summary of how Cardano sidechains and PoA actu
   deleted, as has the `markdown-page` template page. Recoverable from git history. The `blog/` directory is
   disabled in the config because its only posts were the Docusaurus template's own.
 
-  The rewrite deliberately **omits** two things it could have said: the reason the circulating supply is
-  unconfirmed (the two lost wallets), and any figure for HRV's value. Supply is described as "being
-  confirmed"; value as none, since the treasury is unfunded. If those should be stated publicly, that is the
-  user's call.
+  The site states two things explicitly, on the user's instruction: that the circulating supply is unconfirmed
+  because **two wallets holding HRV were lost after the mint** — with the caveat that how a lost wallet is
+  treated on-chain is not finalised, so the supply should not be assumed reduced — and that **HRV has no value,
+  with no price, exchange rate or sale offered**. It quotes no HRV figure, because there is none to quote.
 - **`website/`** — a **separate git repository** (`Gynode/HARVEST-Docusaurus-Site`) containing a *built*
   Docusaurus site with a different content set: a whitepaper (abstract, introduction, vision-mission,
   tokenomics, core-technology-architecture, use-cases-applications, ecosystem-community, roadmap, team-legal,

@@ -113,8 +113,10 @@ what was void.
 **The site content was rewritten (2026-09-18)** from the superseded RWA narrative to the current direction:
 introduction, HRV token, governance, NFTs, Node Handlers, project status. The `How-to-Participate/` group
 (`1 ADA = 1,000 HRV`, smart-wallet launch, staking ADA, CSWAP liquidity pool) and the `markdown-page` template
-page were deleted; `blog` is disabled because its only posts were the Docusaurus template's. The rewrite
-deliberately does not state *why* the circulating supply is unconfirmed, and quotes no HRV value.
+page were deleted; `blog` is disabled because its only posts were the Docusaurus template's. On the user's
+instruction the site now states explicitly that two wallets holding HRV were lost after the mint (so the
+circulating supply is unconfirmed, and it should not be assumed reduced on-chain) and that HRV has no value,
+with no price or sale offered.
 
 **Deployment is via a `gh-pages` branch, not `actions/deploy-pages`.** The workflow builds the site and force-
 pushes `build/` to `gh-pages`, so the repo's Pages source stays "Deploy from a branch" and the only thing to

@@ -31,13 +31,13 @@ The sidechain + DAO material in `blockchain/` is the current project, built on *
 via the Cardano Sidechain Toolkit), with on-chain code in **Aiken**. The treasury is unfunded — it still has
 to be funded with actual fiat, so **HRV has no value today**.
 
-The **RWA positioning is superseded**, but not everything it claimed was wrong. It lives in the repo root's
-Docusaurus site (`docs/intro.md`, `docs/How-to-Participate/`) and in the `Gynode/HARVEST` history of
-Mar–May 2025: HRV as a Cardano Native Token backed by real-world assets, Shari'ah-aligned, launched through
-an anti-whale smart wallet (send ADA, receive HRV at a fixed rate), revalued roughly annually through a CSWAP
-liquidity pool, with lost wallets treated as burned. The token half of that is true — HRV is minted on
-Cardano as a CNT. Superseded is the *positioning around it*: the CSWAP pool, the smart-wallet launch, the
-annual revaluation. Do not build against those without asking.
+The **RWA positioning is superseded**, but not everything it claimed was wrong. It was published on the repo's
+Docusaurus site until 2026-09-18, when that content was replaced (it remains in git history), and in the
+`Gynode/HARVEST` history of Mar–May 2025: HRV as a Cardano Native Token backed by real-world assets,
+Shari'ah-aligned, launched through an anti-whale smart wallet (send ADA, receive HRV at a fixed rate), revalued
+roughly annually through a CSWAP liquidity pool, with lost wallets treated as burned. The token half of that is
+true — HRV is minted on Cardano as a CNT. Superseded is the *positioning around it*: the CSWAP pool, the
+smart-wallet launch, the annual revaluation. Do not build against those without asking.
 
 ---
 
@@ -101,12 +101,22 @@ documentation) as complete.
 Treat all of it as specification, never as evidence of a working system. `cardano_sidechain_research.md` is
 the exception — it is a genuine summary of how Cardano sidechains and PoA actually work, and is accurate.
 
-### 2.5 The websites — two trees, both superseded narrative
+### 2.5 The websites — two trees
 
-- **Repo root** (`docs/`, `src/`, `static/`, `blog/`, `docusaurus.config.js`, `package.json`, `sidebars.js`) —
-  a Docusaurus **source** site (Docusaurus `2.0.0-beta.18`, React 17). This is the tip of `origin/main`. It
-  carries the superseded RWA narrative. Its content set is `docs/intro.md` plus a `How-to-Participate/` group
-  (buy-harvest, stake-ADA, liquidity-pool, further-development).
+- **Repo root** (`docs/`, `src/`, `static/`, `docusaurus.config.js`, `package.json`, `sidebars.js`) — a
+  Docusaurus **source** site (Docusaurus `2.0.0-beta.18`, React 17), built and deployed to `gh-pages`.
+  **Rewritten 2026-09-18** to describe the current direction: introduction, the HRV token, governance, the
+  NFTs, Node Handlers, and project status.
+
+  Its previous content was the superseded RWA narrative — `1 ADA = 1,000 HRV`, a smart-wallet launch, staking
+  ADA in the HARVEST pool, a CSWAP liquidity pool — and the `How-to-Participate/` group holding it has been
+  deleted, as has the `markdown-page` template page. Recoverable from git history. The `blog/` directory is
+  disabled in the config because its only posts were the Docusaurus template's own.
+
+  The rewrite deliberately **omits** two things it could have said: the reason the circulating supply is
+  unconfirmed (the two lost wallets), and any figure for HRV's value. Supply is described as "being
+  confirmed"; value as none, since the treasury is unfunded. If those should be stated publicly, that is the
+  user's call.
 - **`website/`** — a **separate git repository** (`Gynode/HARVEST-Docusaurus-Site`) containing a *built*
   Docusaurus site with a different content set: a whitepaper (abstract, introduction, vision-mission,
   tokenomics, core-technology-architecture, use-cases-applications, ecosystem-community, roadmap, team-legal,
@@ -182,9 +192,11 @@ Do not resolve any of these by assumption.
    native script or a Plutus validator; and where voting power's source of truth lives (a snapshot datum, or a
    validator reading the holder's UTxO). See `dao_deployment_steps.md` §2. All of these block writing any
    Aiken.
-4. **Site trees.** `website/` is a separate repository. Adding it to this repo as-is would create a gitlink
-   with no `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was
-   done — it is ignored instead. Decide before touching the site.
+4. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*
+   sidechain-era site with a whitepaper. Adding it to this repo as-is would create a gitlink with no
+   `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was done —
+   it is ignored. Now that the repo-root site has been rewritten, decide whether `website/`'s whitepaper
+   content should be folded into it, kept separate, or dropped.
 5. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
    npm run build` succeeds on Node 20, the built site serves, and the publish step was simulated against a
    local bare repository (77 files, `.nojekyll` included, `gh-pages` receiving a valid site root). It has never

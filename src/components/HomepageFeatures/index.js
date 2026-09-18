@@ -4,43 +4,39 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Buy the HARVEST token',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'A permissioned sidechain',
     description: (
       <>
-        Send some ADA to the wallet address shown in the documentation
-        to buy some HARVEST tokens.
+        HARVEST runs alongside Cardano as a Proof-of-Authority sidechain. Block production is
+        round-robin among a set of authorised Node Handlers, which means predictable block times
+        and no need for mining hardware.
       </>
     ),
   },
   {
-    title: 'Stake some ADA',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'One HRV, bridged rather than re-minted',
     description: (
       <>
-        Support the growth of the project by staking some of your ADA 
-        in the HARVEST stake pool.
+        HRV is a Cardano native token. Locking it on mainnet makes the equivalent amount available
+        on the sidechain, and returning it releases the original. There is no second supply, so
+        sidechain HRV can never exceed what is locked.
       </>
     ),
   },
   {
-    title: 'Sit back and relax',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Governed by its holders',
     description: (
       <>
-        Now just let things brew.  Remember growth
-        takes time so wait patiently for the HARVEST.
+        The HARVEST DAO handles proposals, quadratic voting and a multi-signature treasury, with
+        Node Handlers reviewing proposals before they reach a vote. The treasury is not yet funded.
       </>
     ),
   },
 ];
 
-function Feature({Svg, title, description}) {
+function Feature({title, description}) {
   return (
     <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
       <div className="text--center padding-horiz--md">
         <h3>{title}</h3>
         <p>{description}</p>

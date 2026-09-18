@@ -26,11 +26,10 @@ function HomepageHeader() {
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title="A Proof-of-Authority sidechain for Cardano"
+      description="HARVEST is a permissioned Proof-of-Authority sidechain for the Cardano ecosystem, and the HARVEST DAO that governs its treasury.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

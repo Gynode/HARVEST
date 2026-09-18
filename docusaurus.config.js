@@ -6,8 +6,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'HARVEST Website',
-  tagline: 'The Token for the Bear Market and Beyond',
+  title: 'HARVEST',
+  tagline: 'A Proof-of-Authority sidechain for Cardano',
   url: 'https://Gynode.github.io',
   baseUrl: '/HARVEST/',
   onBrokenLinks: 'throw',
@@ -23,15 +23,11 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/Gynode/HARVEST/tree/main/packages/create-docusaurus/templates/shared/',
+          editUrl: 'https://github.com/Gynode/HARVEST/tree/main/',
         },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          editUrl:
-            'https://github.com/Gynode/HARVEST/tree/main/packages/create-docusaurus/templates/shared/',
-        },
+        // Disabled: the only posts are the Docusaurus template's own, which
+        // have nothing to do with HARVEST. Re-enable when there is real news.
+        blog: false,
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
@@ -43,8 +39,8 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Website',
-        
+        title: 'HARVEST',
+
         items: [
           {
             type: 'doc',
@@ -52,7 +48,16 @@ const config = {
             position: 'left',
             label: 'Documentation',
           },
-          
+          {
+            to: '/docs/hrv-token',
+            position: 'left',
+            label: 'The HRV token',
+          },
+          {
+            to: '/docs/status',
+            position: 'left',
+            label: 'Status',
+          },
           {
             href: 'https://github.com/Gynode/HARVEST',
             label: 'GitHub',

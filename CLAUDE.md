@@ -110,6 +110,12 @@ Settled by the user. These override whatever the older documents say.
 files. Status banners were added to the three documents in `blockchain/documentation/`. `CHANGELOG.md` records
 what was void.
 
+**The site content was rewritten (2026-09-18)** from the superseded RWA narrative to the current direction:
+introduction, HRV token, governance, NFTs, Node Handlers, project status. The `How-to-Participate/` group
+(`1 ADA = 1,000 HRV`, smart-wallet launch, staking ADA, CSWAP liquidity pool) and the `markdown-page` template
+page were deleted; `blog` is disabled because its only posts were the Docusaurus template's. The rewrite
+deliberately does not state *why* the circulating supply is unconfirmed, and quotes no HRV value.
+
 **Deployment is via a `gh-pages` branch, not `actions/deploy-pages`.** The workflow builds the site and force-
 pushes `build/` to `gh-pages`, so the repo's Pages source stays "Deploy from a branch" and the only thing to
 change is the branch name. This was chosen because GitHub's Pages settings did not offer "GitHub Actions" as a
@@ -129,10 +135,10 @@ buildable** — which also means the old `path: '.'` workflow could never have p
    parameter that references supply should be fixed until this is known.**
 2. **The QSTP request** — funding is to be fiat, but the roadmap previously specified ADA amounts. The
    amount and asset of the actual request must be restated before it is used for an application.
-3. **The two site trees** — `website/` is a separate repo with its own history, and reference to it as-is
-   from this repo would create a broken gitlink. Absorbing it (and deleting its `.git`) would discard that
-   history, so it was left ignored. The superseded RWA site source sits at the repo root (it is the tip of
-   `origin/main`). Neither has been restructured.
+3. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site
+   with a whitepaper. Adding it as-is would create a gitlink with no `.gitmodules`; absorbing it would discard
+   its history. It is ignored. Now that the repo-root site has been rewritten to the current direction, decide
+   whether that whitepaper should be folded in, kept separate, or dropped.
 4. **On-chain design** — what belongs in a validator versus off-chain, the treasury custody model
    (native script or Plutus validator), and the source of truth for voting power. See
    `dao_deployment_steps.md` §2; these block writing any Aiken.

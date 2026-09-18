@@ -20,16 +20,23 @@ new file.
 
 | Asset | Detail |
 |-------|--------|
-| **HRV coin** | Native currency of the sidechain. Preminted; supply figure is disputed — see "Open decisions". |
+| **HRV coin** | **Minted on Cardano mainnet as a Cardano Native Token (CNT): 1,000,000,000.** Also the native currency of the sidechain, bridged via Plutus. Two wallets have since been lost — remaining supply unconfirmed. |
 | **NFTs** | 3,125 designed NFTs, minted on the sidechain, bridged from Cardano. |
 | **Node Handlers (Masters)** | Authorised validators. Round-robin block production, minimal hardware (dual-core, 8 GB RAM, 250 GB SSD, 10 Mbps). |
-| **HARVEST DAO** | Governance over treasury, proposals, quadratic voting. QSTP (Qatar Science and Technology Park) funding strategy: $100K of ADA backing, targeted Q1 2026. |
+| **HARVEST DAO** | Governance over treasury, proposals, quadratic voting. The treasury is **unfunded** — it still has to be funded with actual fiat, so HRV has no value yet. QSTP (Qatar Science and Technology Park) entry targeted Q1 2026. |
+| **Platform** | **Cardano / Plutus**, eUTxO, via the Cardano Sidechain Toolkit. |
 
-**Current direction (decided 2026-09-18):** the sidechain + DAO work in `blockchain/` is the real HARVEST.
-The RWA / Cardano-native-token narrative in the repo root and `docs/` (HRV as a CNT, CSWAP liquidity pool,
-anti-whale smart-wallet launch) is **superseded** and kept only as history.
+**Current direction (decided 2026-09-18):** the sidechain + DAO work in `blockchain/` is the real HARVEST,
+built on Cardano/Plutus. The RWA *positioning* in the repo root and `docs/` (CSWAP liquidity pool,
+anti-whale smart-wallet launch, annual revaluation) is superseded and kept only as history — though its
+central claim holds: HRV genuinely is a Cardano native token.
 
 ## State of the code — read this before trusting any document
+
+**Everything in `blockchain/` is a deliberate stub, and the plan is to fill it with actual code.** Because the
+platform is Cardano/Plutus, that is not a matter of filling in function bodies: the stubs are Python, and
+nothing in Python runs on Cardano. Treat the Python DAO contracts as the behavioural specification to
+reimplement in Plutus (Haskell) or Aiken.
 
 The design documents in `blockchain/development_plan/` and `blockchain/documentation/` are **aspirational**,
 written in the present tense as though the system exists. `blockchain/development_plan/todo.md` ticks off
@@ -83,23 +90,34 @@ npm install && npm start
 There is no build, lint, or test command for the project itself, because there is no build system, no
 linter config, and no tests.
 
-## Open decisions
+## Decisions taken (2026-09-18)
 
-These are unresolved and will mislead you if you assume an answer:
+Settled by the user. These override whatever the older documents say.
 
-1. **HRV supply** — `blockchain/development_plan/harvest_blockchain_architecture.md` says
-   **1,000,000,000** preminted. The DAO package says **50,000,000**. Nothing reconciles them.
-2. **HRV value** — `corrected_hrv_valuation.md` states HRV has **$0** standalone value and is worth only its
-   ADA backing ($100K / 50M = $0.002). But `updated_qstp_treasury_summary.md` and `qstp_treasury_roadmap.md`
-   still price it at **$0.01 → $500,000** treasury. The "corrected" model never propagated.
-3. **Chain platform** — the architecture docs specify Cardano/Plutus, but
-   `dao_deployment_steps.md` assumes EVM/web3 (`HARVEST_RPC_URL`, `HARVEST_CHAIN_ID`,
-   `DEPLOYER_PRIVATE_KEY`, `pip install web3`, `python3 governance_token.py` as a "deployment").
-4. **The two site trees** — `website/` is a separate repo with its own history, and reference to it as-is
+1. **Platform — Cardano/Plutus.** `dao_deployment_steps.md` is an EVM/web3 procedure and contradicts this; it
+   is wrong and needs rewriting before anyone follows it.
+2. **HRV supply — 1,000,000,000, minted on Cardano mainnet as a Cardano Native Token.** The
+   **50,000,000** figure in the DAO package and treasury docs is stale.
+3. **HRV value — none yet.** The treasury is unfunded and still has to be funded with actual fiat.
+   `corrected_hrv_valuation.md`'s backing-derived model is the right shape, but the backing is **fiat**, not
+   ADA — so the **$0.01 / $500,000** figures in `updated_qstp_treasury_summary.md` and
+   `qstp_treasury_roadmap.md` are wrong.
+
+## Still open
+
+1. **Remaining HRV supply** — two wallets were lost after the mint, so the amount actually left has to be
+   read off another computer. Related and undocumented: the repo-root site states "lost wallets are treated
+   as burned, reducing supply", but nothing in the sidechain docs says how a lost wallet is reflected
+   on-chain.
+2. **CNT versus sidechain HRV** — HRV already exists as a Cardano native token, while
+   `harvest_blockchain_architecture.md` §4 has the sidechain *minting* HRV against assets locked in a mainnet
+   Plutus script. Whether the sidechain HRV is the CNT bridged, or a second representation of the same 1
+   billion, is not documented anywhere. Resolve this before writing bridge code.
+3. **The two site trees** — `website/` is a separate repo with its own history, and reference to it as-is
    from this repo would create a broken gitlink. Absorbing it (and deleting its `.git`) would discard that
    history, so it was left ignored. The superseded RWA site source sits at the repo root (it is the tip of
    `origin/main`). Neither has been restructured.
-5. **GitHub Pages workflow** — `.github/workflows/static.yml` now builds the Docusaurus site and publishes
+4. **GitHub Pages workflow** — `.github/workflows/static.yml` now builds the Docusaurus site and publishes
    `./build` only, so the `blockchain/` material is never published. It previously uploaded the whole repo
    (`path: '.'`), which would have published everything pushed. **That build step has never run** — verify it
    before the first push that touches `main`.

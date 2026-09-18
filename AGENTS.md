@@ -12,8 +12,9 @@ Last verified: **2026-09-18**, against the working tree at `C:\HARVEST`.
 HARVEST is a permissioned **Proof-of-Authority (PoA) sidechain for the Cardano ecosystem**, and the
 **HARVEST DAO** that governs its treasury.
 
-- **HRV coin** — the sidechain's native currency. Preminted. Used for transaction fees, governance, and
-  in-app rewards.
+- **HRV coin** — **already minted on Cardano mainnet as a Cardano Native Token (CNT): 1,000,000,000.** It is
+  also the sidechain's native currency, used for transaction fees, governance and in-app rewards. Two wallets
+  have since been lost, so the amount actually remaining is unconfirmed — see §3.
 - **NFTs** — 3,125 designed NFTs minted on the sidechain. Cardano-minted NFTs are locked on the mainnet and
   represented as wrapped NFTs on HARVEST, and vice versa.
 - **Node Handlers (Masters)** — the authorised validators. Round-robin block production at a fixed interval,
@@ -25,14 +26,17 @@ HARVEST is a permissioned **Proof-of-Authority (PoA) sidechain for the Cardano e
 
 ### Direction, as decided on 2026-09-18
 
-The sidechain + DAO material in `blockchain/` is the current project.
+The sidechain + DAO material in `blockchain/` is the current project, built on **Cardano / Plutus** (eUTxO,
+via the Cardano Sidechain Toolkit). The treasury is unfunded — it still has to be funded with actual fiat, so
+**HRV has no value today**.
 
-The **RWA / Cardano-native-token narrative is superseded**. That narrative — HRV as a Cardano Native Token
-backed by real-world assets, Shari'ah-aligned, launched through an anti-whale smart wallet (send ADA, receive
-HRV at a fixed rate), valued roughly annually via a CSWAP liquidity pool, no inflation, lost wallets treated
-as burned — lives in the repo root's Docusaurus site (`docs/intro.md`, `docs/How-to-Participate/`) and in the
-`Gynode/HARVEST` history of Mar–May 2025. It is older than the sidechain material and has been kept only as
-history. Do not build against it without asking.
+The **RWA positioning is superseded**, but not everything it claimed was wrong. It lives in the repo root's
+Docusaurus site (`docs/intro.md`, `docs/How-to-Participate/`) and in the `Gynode/HARVEST` history of
+Mar–May 2025: HRV as a Cardano Native Token backed by real-world assets, Shari'ah-aligned, launched through
+an anti-whale smart wallet (send ADA, receive HRV at a fixed rate), revalued roughly annually through a CSWAP
+liquidity pool, with lost wallets treated as burned. The token half of that is true — HRV is minted on
+Cardano as a CNT. Superseded is the *positioning around it*: the CSWAP pool, the smart-wallet launch, the
+annual revaluation. Do not build against those without asking.
 
 ---
 
@@ -112,27 +116,43 @@ the exception — it is a genuine summary of how Cardano sidechains and PoA actu
 
 ---
 
-## 3. Contradictions and open decisions
+## 3. Contradictions: settled and open
 
-Do not resolve any of these by assumption. They are recorded here so a session notices them instead of
-silently picking a side.
+### 3.1 Settled by the user, 2026-09-18
 
-1. **HRV supply.** `harvest_blockchain_architecture.md` §6.1: "The 1 billion pre-minted HARVEST (HRV) coins."
-   The DAO package and treasury docs use **50,000,000**. A factor of 20 apart.
-2. **HRV value.** `corrected_hrv_valuation.md` explicitly corrects the model: HRV coins alone are worth
-   **$0.00**; value comes only from ADA backing, so $100,000 ÷ 50,000,000 = **$0.002/HRV**. But
-   `updated_qstp_treasury_summary.md` ("50M HRV Coins @ $0.01 = $500,000") and `qstp_treasury_roadmap.md`
-   ("Value: $500,000, At conservative $0.01/HRV") were never brought into line, and `CHANGELOG.md` claims both
-   the correction and the $500K figure simultaneously. The "corrected" model is the later intent; the treasury
-   documents still assert the older one.
-3. **Chain platform.** The architecture is Cardano/Plutus/eUTxO via the Cardano Sidechain Toolkit. But
-   `dao_deployment_steps.md` is an EVM/web3 procedure — `pip3 install web3 cryptography`, `HARVEST_RPC_URL`,
-   `HARVEST_CHAIN_ID`, `DEPLOYER_PRIVATE_KEY`, and running the Python contract files as if that deployed them.
-   There is no Plutus, Aiken, or Haskell source in the repository at all.
-4. **Site trees.** `website/` is a separate repository. Adding it to this repo as-is would create a gitlink
+These override every older document. Where a file below is named as *wrong*, it is known-stale and has **not**
+been rewritten yet — treat it as a defect to fix, not as a source of truth.
+
+1. **Platform = Cardano/Plutus.** eUTxO, via the Cardano Sidechain Toolkit.
+   **Wrong:** `dao_deployment_steps.md`, which is an EVM/web3 procedure (`pip3 install web3 cryptography`,
+   `HARVEST_RPC_URL`, `HARVEST_CHAIN_ID`, `DEPLOYER_PRIVATE_KEY`, and running the Python contract files as
+   though that deployed them). There is still no Plutus, Aiken or Haskell source in the repository — the
+   contracts remain Python simulations.
+2. **HRV supply = 1,000,000,000, minted on Cardano mainnet as a Cardano Native Token.**
+   **Wrong:** the DAO package and treasury docs, which use **50,000,000** — a factor of 20 out.
+3. **HRV value = none yet.** The treasury is unfunded and must be funded with actual fiat.
+   `corrected_hrv_valuation.md` has the right *shape* (HRV alone is worth $0.00; value comes only from
+   backing), but the backing is **fiat, not ADA**.
+   **Wrong:** `updated_qstp_treasury_summary.md` ("50M HRV Coins @ $0.01 = $500,000") and
+   `qstp_treasury_roadmap.md` ("Value: $500,000, At conservative $0.01/HRV"). `CHANGELOG.md` asserts both the
+   correction and the $500K figure at once.
+
+### 3.2 Still open
+
+Do not resolve any of these by assumption.
+
+1. **Remaining HRV supply.** Two wallets were lost after the mint, so the amount actually left has to be read
+   off another computer. Related and undocumented: the repo-root site states "lost wallets are treated as
+   burned, reducing supply", but nothing in the sidechain docs says how a lost wallet is reflected on-chain.
+2. **CNT versus sidechain HRV.** HRV already exists as a Cardano native token, yet
+   `harvest_blockchain_architecture.md` §4 has the sidechain *minting* its own HRV against assets locked in a
+   mainnet Plutus script. Is the sidechain HRV the CNT bridged, or a second representation of the same
+   billion? Nothing in the repository says. **Settle this before writing any bridge code** — the whole token
+   model depends on it.
+3. **Site trees.** `website/` is a separate repository. Adding it to this repo as-is would create a gitlink
    with no `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was
    done — it is ignored instead. Decide before touching the site.
-5. **GitHub Pages.** `.github/workflows/static.yml` triggers on push to `main` and previously uploaded the
+4. **GitHub Pages.** `.github/workflows/static.yml` triggers on push to `main` and previously uploaded the
    entire repository (`path: '.'`). It now installs Node, runs `npm ci && npm run build`, and publishes
    `./build` only. **This build has never been executed** — the first push to `main` will run it, and
    Docusaurus 2.0.0-beta.18 on a current Node may or may not build cleanly. Verify before pushing.
@@ -184,10 +204,19 @@ The gap between the documents and reality is the whole story of this repo: the a
 user guides describe a finished sidechain; what exists is a PoA leader-selection demo, four simulation-grade
 DAO contracts, a disconnected UI mockup, and zero tests.
 
+**Everything in `blockchain/` is deliberately a stub, and the plan (stated 2026-09-18) is to fill it with
+actual code.** One consequence is structural, not cosmetic: the stubs are **Python**, but the settled platform
+is **Cardano/Plutus**, so they cannot be completed by filling in function bodies. The Python DAO contracts are
+best treated as the *behavioural specification* — governance, delegation, voting power, quadratic voting,
+proposal lifecycle, treasury approvals — to be reimplemented in Plutus (Haskell) or Aiken. Nothing written in
+Python will execute on Cardano.
+
 If you are picking up development, the real starting points are:
 
-1. Decide the HRV supply and valuation contradiction (§3.1–3.2) — every treasury and governance number
-   depends on it.
-2. Decide the chain platform (§3.3) — everything else is downstream of Cardano/Plutus versus EVM.
-3. Establish a test suite around the DAO contracts, which are the only code worth keeping.
-4. Only then build outward: node software, P2P, storage, the Cardano bridge, and the Chain Follower.
+1. **Pin down the token model** — the remaining supply after the lost wallets, and whether the sidechain HRV
+   is the CNT bridged or a second representation (§3.2, items 1–2). Everything else is built on this.
+2. **Fix the documents that now contradict the settled decisions** (§3.1): `dao_deployment_steps.md` (EVM),
+   the DAO and treasury docs (50M HRV, $0.01, $500K), and `CHANGELOG.md`.
+3. **Establish a test suite around the DAO contracts**, which are the only code worth keeping.
+4. Only then build outward: Plutus/Aiken contracts, node software, P2P, storage, the Cardano bridge, and the
+   Chain Follower.

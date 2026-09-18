@@ -185,9 +185,10 @@ Do not resolve any of these by assumption.
 4. **Site trees.** `website/` is a separate repository. Adding it to this repo as-is would create a gitlink
    with no `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was
    done — it is ignored instead. Decide before touching the site.
-5. **The push to `main`.** The Pages workflow is verified locally: `npm ci && npm run build` succeeds on
-   Node 20 and the built site serves (homepage and doc routes return 200). It has never run in Actions, and
-   `main` is a live Pages branch, so the first push is still the user's call.
+5. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
+   npm run build` succeeds on Node 20, the built site serves, and the publish step was simulated against a
+   local bare repository (77 files, `.nojekyll` included, `gh-pages` receiving a valid site root). It has never
+   run in Actions. The Pages source must also be repointed from `main` to `gh-pages` — see §5.
 
 ---
 
@@ -219,8 +220,13 @@ repository.
 ## 5. Repository rules
 
 - **Remote:** `https://github.com/Gynode/HARVEST.git`, branch `main`.
-- **`main` is a live GitHub Pages site.** Pushing to it runs the Pages workflow. Never push without the
+- **`main` is a live GitHub Pages site.** Pushing to it runs the deploy workflow. Never push without the
   user's explicit go-ahead.
+- **Deployment:** `.github/workflows/static.yml` builds the site and force-pushes `build/` to the **`gh-pages`**
+  branch; Pages serves that branch. It does **not** use `actions/deploy-pages`, because the repository's Pages
+  settings do not offer "GitHub Actions" as a source — the source is "Deploy from a branch", which must be
+  pointed at `gh-pages` / `(root)`. Until it is, Pages keeps serving `main` / `(root)`, i.e. the README
+  rendered by Jekyll. Only `build/` is published, so `blockchain/` and the project docs are never served.
 - **Ignored on purpose** (see `.gitignore`): `website/`, `manus-website-update_node_handler_rewards/`,
   `*.zip`, and the usual Python/Node artifacts. The two site trees are ignored because they are builds, not
   source, and `website/` is a separate repository.

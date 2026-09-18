@@ -1,53 +1,66 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Builds the Docusaurus site and publishes the output to the gh-pages branch,
+# which GitHub Pages then serves via "Deploy from a branch".
+#
+# This deliberately does NOT use actions/deploy-pages, which would require the
+# repository's Pages source to be set to "GitHub Actions". Keeping the branch
+# approach means the only Pages setting that has to change is the branch name:
+#
+#   Settings -> Pages -> Build and deployment -> Source: Deploy from a branch
+#                                              -> Branch: gh-pages / (root)
+#
+# Until that branch is set, Pages keeps serving main / (root) — which Jekyll
+# renders as the repository README, not this site.
+name: Deploy site to gh-pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Required to push the built site back to this repository.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# One deploy at a time. Do not cancel a run in progress: a cancelled run can
+# leave the gh-pages branch half-pushed.
 concurrency:
-  group: "pages"
+  group: "gh-pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
+
       - name: Install dependencies
         run: npm ci
+
       - name: Build site
         run: npm run build
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Publish the built site only. This must never be '.', which would
-          # upload the whole repository — including the blockchain/ material.
-          path: './build'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+
+      # Publish only the built output. The source tree — including blockchain/ —
+      # is never part of what gets served.
+      - name: Publish to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd build
+          # Stop Jekyll from processing the output.
+          touch .nojekyll
+          git init -q
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push --force \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:gh-pages

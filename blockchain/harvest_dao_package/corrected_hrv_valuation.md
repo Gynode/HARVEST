@@ -1,91 +1,58 @@
-# Corrected HRV Coin Valuation
+# HRV Valuation Model
 
-## The Correct Understanding
+**Settled 2026-09-18.** This replaces the earlier "$0.01 per HRV" model, which was wrong.
 
-You're absolutely right! I completely misunderstood how HRV gets its value. 
+## The model in one line
 
-### HRV Valuation Logic:
-- **HRV coins alone**: $0.00 (no standalone value)
-- **HRV coins with ADA backing**: Value comes from the ADA backing
+**HRV has no standalone value.** It is worth only whatever proportion of the DAO treasury backs it — and the
+treasury is currently **unfunded**.
 
-## The Calculation
+## Supply
 
-**$100,000 ADA backing ÷ 50,000,000 HRV coins = $0.002 per HRV coin**
+- **1,000,000,000 HRV were minted on Cardano mainnet** as a Cardano Native Token (CNT). This is the only HRV
+  supply.
+- **Two wallets have since been lost.** The amount actually remaining has not been confirmed — it has to be
+  read off another machine. Until then, no figure should be treated as the circulating supply.
+- The project website states that lost wallets are treated as burned, reducing supply. How a lost wallet is
+  reflected on-chain has **not** been decided.
 
-### That's:
-- **$0.002 per HRV coin**
-- **0.2 cents per HRV coin** 
-- **2 mills per HRV coin** (2/10ths of a cent)
+## One HRV, represented on the sidechain
 
-## Corrected Treasury Setup
+The sidechain does not mint its own HRV. The CNT is locked on Cardano mainnet under a Plutus script and the
+sidechain represents the locked amount. Sidechain supply is therefore bounded by what is locked on mainnet,
+and burning the representation releases the CNT.
 
-### Phase 1: Bootstrap (2025)
-```python
-# HRV coins have NO value without backing
-treasury_assets = {
-    "HRV_coins": 50_000_000,
-    "ADA_backing": 0,
-    "HRV_value_per_coin": 0.00,
-    "Total_treasury_value": 0.00
-}
-```
+Earlier drafts of this package described a separate **50,000,000** HRV "from existing supply" sitting in the
+treasury. That was wrong in both amount and model — there is no second supply to hold.
 
-### Phase 2: QSTP Enhancement (Q1 2026)
-```python
-# HRV coins get value from ADA backing
-treasury_assets = {
-    "HRV_coins": 50_000_000,
-    "ADA_backing": 100_000,  # $100K worth of ADA
-    "HRV_value_per_coin": 100_000 / 50_000_000,  # $0.002
-    "Total_treasury_value": 100_000  # All value comes from ADA
-}
-```
+## Value
 
-## What This Means
+| | |
+|---|---|
+| Standalone value | **$0.00** |
+| Backing today | **none — the treasury is unfunded** |
+| What creates value | funding the treasury with **actual fiat** |
 
-### Before QSTP (2025):
-- **Treasury Value**: $0 (HRV has no backing)
-- **HRV Function**: Governance voting only
-- **Growth Strategy**: Build community, prepare for backing
+Value derives from the treasury; it is not asserted for the token. A per-coin figure is therefore undefined
+until the treasury holds assets.
 
-### After QSTP (2026):
-- **Treasury Value**: $100,000 (from ADA backing)
-- **HRV Value**: $0.002 per coin (backed by ADA)
-- **Growth Strategy**: Grow ADA backing to increase HRV value
+**Void arithmetic.** The following appeared in this package and must not be reused:
 
-## Implications for DAO
+- "$100,000 ADA backing ÷ 50,000,000 HRV coins = $0.002 per HRV" — wrong supply, and the backing was never
+  secured.
+- The growth scenarios built on it ("$200K → $0.004", "$500K → $0.01", "$1M → $0.02") — same.
+- "$500,000 treasury (50M HRV @ $0.01)" — circular: the treasury was being valued at a price derived from
+  holding the treasury's own token.
 
-### Governance:
-- **Voting Power**: Based on HRV coin holdings (not dollar value)
-- **Proposal Threshold**: Set in HRV coin amounts
-- **Community Participation**: Driven by governance rights, not monetary value
+The backing asset is **fiat**, not ADA.
 
-### Treasury Growth:
-- **Value Growth**: Increase ADA backing to increase HRV value
-- **Diversification**: Add other backing assets (USDC, etc.)
-- **Yield Generation**: ADA staking increases backing pool
+## What this means for governance
 
-### Economic Model:
-- **HRV as Governance Token**: Primary function is voting
-- **ADA as Value Backing**: Provides economic value to HRV
-- **Sustainable Growth**: More backing = higher HRV value
+Voting power is denominated in HRV, not in currency, so governance is unaffected by the treasury being
+unfunded. Proposal thresholds are set in HRV amounts — see `harvest_dao/docs/technical_documentation.md`.
 
-## Updated Treasury Strategy
+## Open
 
-### Goal: Increase ADA Backing
-1. **QSTP Funding**: $100K ADA backing (baseline)
-2. **Community Contributions**: Additional ADA donations
-3. **Partnership Revenue**: Revenue in ADA/other assets
-4. **Yield Generation**: ADA staking increases backing pool
-
-### HRV Value Growth Scenarios:
-- **$200K backing**: $0.004 per HRV (double value)
-- **$500K backing**: $0.01 per HRV (5x value)
-- **$1M backing**: $0.02 per HRV (10x value)
-
-## The Corrected Model
-
-**HRV is a governance token backed by treasury assets, not a standalone currency with arbitrary value.**
-
-This is actually a much more sustainable and honest model than pretending HRV has standalone value! 💪
-
+1. The remaining supply, after the two lost wallets.
+2. How a lost wallet is treated on-chain (burned? unspendable? both, depending on custody?).
+3. The size and asset of the first treasury funding — see `qstp_treasury_roadmap.md`.

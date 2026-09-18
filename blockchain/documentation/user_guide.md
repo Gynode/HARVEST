@@ -1,5 +1,8 @@
 # HARVEST User Guide
 
+> **Status:** there is no HARVEST wallet, explorer or sidechain to use yet. This guide describes how they are
+> intended to work — read it as specification. See `AGENTS.md` at the repository root for what actually exists.
+
 Welcome to HARVEST! This guide will help you understand how to interact with the HARVEST blockchain, manage your HARVEST (HRV) coins, and handle your NFTs.
 
 ## 1. Understanding HARVEST

@@ -1,5 +1,9 @@
 # HARVEST Node Handler Guide
 
+> **Status:** no HARVEST node software exists yet, so there is nothing to install. This guide describes the
+> intended setup and operating model for a Node Handler — read it as specification. See `AGENTS.md` at the
+> repository root for what actually exists.
+
 This guide provides comprehensive instructions for setting up, configuring, and maintaining a HARVEST Node Handler (Master). As a Node Handler, you play a crucial role in the security and operation of the HARVEST sidechain, responsible for validating transactions and producing blocks.
 
 ## 1. Introduction to HARVEST Node Handlers

@@ -1,14 +1,15 @@
 # HARVEST
 
 A permissioned **Proof-of-Authority (PoA) sidechain for the Cardano ecosystem**, and the **HARVEST DAO**
-that governs its treasury.
+that governs its treasury. Built on Cardano/Plutus; on-chain code in **Aiken**.
 
-- **HRV coin** — the sidechain's native currency, used for transaction fees, governance and rewards.
+- **HRV coin** — a Cardano native token, **1,000,000,000 minted on mainnet**. It is the only HRV: the sidechain
+  represents the locked token rather than minting its own. Used for transaction fees, governance and rewards.
 - **3,125 NFTs** — minted on the sidechain, bridged to and from Cardano.
 - **Node Handlers (Masters)** — authorised validators producing blocks in round-robin order on minimal
   hardware (dual-core CPU, 8 GB RAM, 250 GB SSD, 10 Mbps).
-- **HARVEST DAO** — proposals with Node Handler review, quadratic voting, and a multi-signature treasury,
-  with a QSTP (Qatar Science and Technology Park) ADA-backing strategy targeted at Q1 2026.
+- **HARVEST DAO** — proposals with Node Handler review, quadratic voting, and a multi-signature treasury. The
+  treasury is **unfunded** and is to be funded with actual fiat, so HRV has no value yet.
 
 ## Status
 
@@ -19,7 +20,7 @@ The code does not implement one yet:
 |-----------|-------|
 | PoA consensus | Prototype — round-robin leader selection works; block signing and validation are placeholders |
 | HRV / NFT contracts | Prototype — in-memory Python demonstration classes |
-| DAO contracts | Real simulation logic (governance, proposals, quadratic voting, treasury), not deployable |
+| DAO contracts | Specification-grade Python (governance, proposals, quadratic voting, treasury), not deployable — on-chain code is to be written in **Aiken** |
 | DAO web interface | UI mockup — React 19 + Vite + shadcn/ui, rendering hardcoded data |
 | Node software, P2P, storage, Cardano bridge, Chain Follower | Not started |
 | Tests | None |

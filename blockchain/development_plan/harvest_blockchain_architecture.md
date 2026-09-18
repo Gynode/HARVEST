@@ -1,5 +1,8 @@
 # HARVEST Blockchain Architecture and Specifications
 
+> **Status:** design document. It describes intended architecture, not implemented software — see `AGENTS.md`
+> at the repository root for what actually exists. The HRV model in §4 and §6.1 was settled on 2026-09-18.
+
 ## 1. Introduction
 
 This document outlines the proposed architecture and specifications for the HARVEST sidechain, a new blockchain built on the Cardano ecosystem. HARVEST will leverage a Proof-of-Authority (PoA) consensus mechanism to ensure efficient, secure, and scalable operations, while maintaining minimal hardware requirements for its Node Handlers (Masters).
@@ -58,7 +61,7 @@ Node Handlers will need to run the following software:
 
 The HARVEST sidechain will maintain a secure and efficient bridge with the Cardano mainnet. This interoperability will primarily facilitate:
 
-*   **HARVEST Coin Transfers**: Users will be able to deposit ADA or other Cardano native tokens into a designated Plutus script on the mainnet, which will trigger the minting of an equivalent amount of HARVEST coins on the sidechain. Conversely, burning HARVEST coins on the sidechain will release the locked assets on the mainnet.
+*   **HARVEST Coin Transfers**: HRV is a Cardano native token that **already exists on mainnet** — 1,000,000,000 were minted. The sidechain does **not** mint a second supply. Locking HRV in a designated Plutus script on mainnet makes the equivalent amount available as a representation on the sidechain; burning that representation releases the locked HRV on mainnet. Sidechain supply is therefore bounded by what is locked and can never exceed the mainnet supply. (Two wallets have since been lost, so the amount actually remaining on mainnet is not yet confirmed.)
 *   **NFT Transfers**: Similarly, NFTs minted on Cardano can be locked on the mainnet and represented as wrapped NFTs on the HARVEST sidechain, allowing for faster and cheaper transactions. Unwrapping them on the sidechain will release the original NFTs on the mainnet.
 
 This architecture ensures that HARVEST benefits from the security and liquidity of the Cardano ecosystem while providing a specialized, high-performance environment for its specific use cases.
@@ -97,7 +100,7 @@ Upon receiving a new block, other Node Handlers will:
 
 ### 6.1. HRV Coin Utility
 
-The 1 billion pre-minted HARVEST (HRV) coins will serve as the native currency of the HARVEST sidechain. Its primary utilities will include:
+1,000,000,000 HRV were minted on Cardano mainnet as a Cardano native token, and it is that token — represented on the sidechain as described in §4 — that serves as the sidechain's native currency. Its primary utilities will include:
 
 *   **Transaction Fees**: All transactions on the HARVEST sidechain will incur a small fee payable in HRV, ensuring network sustainability and preventing spam.
 *   **Governance**: HRV holders may have a role in future governance decisions related to the HARVEST sidechain, such as proposing and voting on protocol upgrades or changes to Node Handler parameters.
@@ -116,8 +119,8 @@ The 3125 designed NFTs will be minted and managed on the HARVEST sidechain. The 
 
 HARVEST will support smart contracts to enable the development of decentralized applications (dApps) on its sidechain. The choice of smart contract language and execution environment will prioritize security, efficiency, and compatibility with the Cardano ecosystem.
 
-*   **Language**: Plutus (or a compatible eUTxO-based language) will be considered for smart contract development to leverage existing Cardano expertise and tools. Alternatively, a widely adopted EVM-compatible environment could be explored for broader developer accessibility, depending on the specific requirements and trade-offs.
-*   **Execution Environment**: The smart contract execution environment will be optimized for performance and low gas fees, aligning with the goal of an efficient sidechain.
+*   **Language**: Plutus, written in **Aiken** (settled 2026-09-18) — an eUTxO-based language that compiles to Plutus Core and targets the same ledger. The "EVM-compatible environment" alternative previously floated here is closed; this is a Cardano project, and there is no ERC20 or `0x` address anywhere in it.
+*   **Execution Environment**: The smart contract execution environment will be optimized for performance and low transaction fees and execution-unit costs, aligning with the goal of an efficient sidechain.
 
 ## 8. Security Considerations
 

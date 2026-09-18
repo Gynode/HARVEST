@@ -1,5 +1,8 @@
 # HARVEST DAO Technical Documentation
 
+> **Status:** this document describes the intended system. The contracts it names are **Python specifications
+> that have not been ported to Cardano** — nothing is deployed. See `AGENTS.md` at the repository root.
+
 This document provides a comprehensive technical overview of the HARVEST DAO, including its architecture, smart contracts, and governance mechanisms.
 
 ## 1. Introduction
@@ -24,9 +27,9 @@ The HARVEST DAO is powered by a suite of smart contracts that automate the gover
 
 ### 3.1. Governance Token (governance_token.py)
 
-The `GovernanceToken` contract is an ERC20-compliant token that represents voting power in the HARVEST DAO. Key features include:
+`GovernanceToken` is a **Python specification** of the governance behaviour, not a deployed contract. (An earlier revision of this document called it "ERC20-compliant" — HRV is a Cardano native token, not an ERC20, and this is not an EVM project.) Key features:
 
-*   **Token Supply:** A fixed supply of 1 billion HRV tokens.
+*   **Token Supply:** A fixed supply of **1,000,000,000 HRV**, minted on Cardano mainnet as a Cardano native token. The sidechain represents the locked token rather than minting its own; the amount remaining is unconfirmed, because two wallets were lost.
 *   **Voting Power:** Each HRV token represents one vote in the governance process.
 *   **Delegation:** Token holders can delegate their voting power to other addresses, such as Node Handlers or community leaders.
 *   **Proposal Threshold:** A minimum number of HRV tokens required to create a governance proposal.

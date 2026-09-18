@@ -1,5 +1,9 @@
 # HARVEST Blockchain Technical Documentation
 
+> **Status:** this document describes the intended system, not one that exists. It is written in the present
+> tense about software that has not been built — read it as specification. See `AGENTS.md` at the repository
+> root for what actually exists.
+
 ## 1. Introduction
 
 This document provides a comprehensive technical overview of the HARVEST blockchain, a sidechain built on the Cardano ecosystem. HARVEST is designed to offer a high-performance, scalable, and secure environment for digital assets, leveraging a Proof-of-Authority (PoA) consensus mechanism.
@@ -85,7 +89,7 @@ The `poa_consensus.py` module implements the core logic for the Proof-of-Authori
 
 ### 4.2. HRV Token Smart Contract
 
-The `hrv_token.py` module defines the smart contract for the HARVEST (HRV) coin. It manages the 1 billion pre-minted HRV coins and provides essential token functionalities:
+The `hrv_token.py` module is a **Python prototype**, not a Cardano smart contract. HRV itself is a Cardano native token — **1,000,000,000 minted on mainnet** — which the sidechain represents rather than re-mints (see §4 of the architecture document). The prototype demonstrates the token functionalities the real implementation will need:
 
 *   **Total Supply Management**: Tracks the total number of HRV coins in circulation.
 *   **Balance Tracking**: Manages individual user balances.

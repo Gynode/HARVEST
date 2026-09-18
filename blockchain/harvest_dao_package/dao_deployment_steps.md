@@ -1,410 +1,132 @@
-# HARVEST DAO Deployment Steps
+# HARVEST DAO — Deployment Plan (Cardano)
 
-## Phase 1: Pre-Deployment Setup
+**Rewritten 2026-09-18.** The previous version of this file was an EVM/web3 procedure — `pip3 install web3`,
+`HARVEST_RPC_URL`, `HARVEST_CHAIN_ID`, `DEPLOYER_PRIVATE_KEY`, `0x...` contract addresses, and running the
+Python files as though that deployed them. **None of that applies.** HARVEST is a Cardano/Plutus project.
 
-### 1.1 Environment Preparation
+**Nothing is deployed, and no on-chain code exists yet.** There are no validators to deploy — the Python in
+`harvest_dao/contracts/` is a behavioural specification (see `harvest_dao/docs/technical_documentation.md`).
+This document is the intended path, not a runbook; steps are marked with what actually exists.
+
+## 1. Language and toolchain
+
+On-chain code is written in **Aiken** (decided 2026-09-18). It compiles to Plutus Core and targets the same
+ledger as Plutus Tx — it is not a separate chain.
+
 ```bash
-# Extract the DAO package
-# unzip harvest_dao_complete_package.zip
-cd harvest_dao_package/
+# Install Aiken (see aiken-lang.org for the current instructions)
+aiken --version
 
-# Verify Python environment
-python3 --version  # Should be 3.11+
-pip3 install web3 cryptography
+# Tools you will also need
+#   - a Cardano node (or a provider such as Blockfrost / Koios / Maestro)
+#   - cardano-cli, or a transaction builder (Lucid, Mesh)
 ```
 
-### 1.2 Network Configuration
+## 2. Design before code
+
+Not yet done, and blocking:
+
+- [ ] **Decide what is on-chain.** Governance voting and treasury custody do not have to live in the same
+      validator. Settle the split before writing any of it.
+- [ ] **Decide the treasury custody model.** Cardano multi-signature can be a native script or a Plutus
+      validator; the choice drives how treasury spends are authorised.
+- [ ] **Decide voting power's source of truth.** Voting power is computed from HRV holdings and delegations.
+      On-chain, that means either a snapshot datum or a validator that reads the holder's UTxO — this is the
+      central design question of the whole DAO.
+
+## 3. Build the validators
+
 ```bash
-# Configure HARVEST sidechain connection
-export HARVEST_RPC_URL="your_harvest_sidechain_rpc_url"
-export HARVEST_CHAIN_ID="your_chain_id"
-export DEPLOYER_PRIVATE_KEY="your_deployer_private_key"
+aiken new harvest_dao
+cd harvest_dao
+
+# the validators live in validators/
+aiken build      # compiles; emits plutus.json (CIP-57 blueprint)
+aiken check      # runs the test blocks
+aiken fmt
 ```
 
-## Phase 2: Smart Contract Deployment
+Port the behaviour from the Python specification: delegation and voting power (`governance_token.py`),
+proposal lifecycle and Node Handler review (`proposal_manager.py`), quadratic voting with quorum
+(`voting_mechanism.py`), and multi-signature treasury with timelocks (`treasury_manager.py`).
 
-### 2.1 Deploy Governance Token Contract
+The Python files are useful as *behaviour* — they are typed, readable, and each has a working demo. Port the
+rules, not the code.
+
+## 4. Test
+
+Aiken has tests built in (`test` blocks, run by `aiken check`). Additionally:
+
+- [ ] Property tests over voting power: delegation in/out nets correctly; no address can exceed total supply.
+- [ ] Proposal lifecycle: illegal transitions are rejected (e.g. executing a proposal that never passed).
+- [ ] Treasury: a spend without the required approvals fails.
+- [ ] Quadratic voting: cost curve behaves at boundaries (zero votes, maximum votes).
+
+There is currently **no test suite of any kind** in `harvest_dao/tests/` — that directory is empty.
+
+## 5. Deploy to a testnet
+
+Work on **Preview** or **Preprod** first. Never on mainnet until the token model question below is settled.
+
+- [ ] Fund a test wallet from the testnet faucet.
+- [ ] Publish the validators (reference scripts) and record the script hashes.
+- [ ] Register the DAO's own state UTxO (treasury address, proposal counter, parameter datum).
+
+## 6. The bridge is a prerequisite for anything touching HRV
+
+The sidechain does not mint its own HRV. The CNT is locked on Cardano mainnet under a Plutus script and the
+sidechain represents the locked amount (settled 2026-09-18 — see `corrected_hrv_valuation.md`).
+
+That means the DAO's on-chain code depends on the bridge's locking validator, which **does not exist yet**.
+Settle the bridge design first or build against a placeholder.
+
+Also unresolved and load-bearing: **the amount of HRV actually remaining** after two wallets were lost. No
+governance parameter that references supply should be fixed until that is known.
+
+## 7. Initial configuration
+
+Node Handlers and the treasury committee are **Cardano addresses** (bech32, `addr1...`), not `0x...`
+addresses. Configuring them means registering keys and, where authority is on-chain, putting their
+credentials into the validator's datum or a native script.
+
+There is no `add_node_handler()` transaction today — the Python method is a `list.append()` on an in-memory
+list.
+
+## 8. Web interface
+
+The React interface in `harvest-dao-interface/` is a **mockup**: it renders hardcoded data and makes no
+network calls at all. It needs a backend before it can show anything real.
+
 ```bash
-cd contracts/
-python3 governance_token.py
-
-# Expected output:
-# HARVEST DAO Governance Token Contract Initialized
-# Total Supply: 1,000,000,000 HRV
-# Contract Address: 0x...
-```
-
-### 2.2 Deploy Proposal Manager
-```bash
-python3 proposal_manager.py
-
-# Expected output:
-# HARVEST DAO Proposal Manager Initialized
-# Contract Address: 0x...
-```
-
-### 2.3 Deploy Voting Mechanism
-```bash
-python3 voting_mechanism.py
-
-# Expected output:
-# HARVEST DAO Voting Mechanism Initialized
-# Contract Address: 0x...
-```
-
-### 2.4 Deploy Treasury Manager
-```bash
-python3 treasury_manager.py
-
-# Expected output:
-# HARVEST DAO Treasury Manager Initialized
-# Contract Address: 0x...
-```
-
-### 2.5 Verify Deployments
-```bash
-cd ../tests/
-python3 test_governance_token.py
-python3 test_proposal_manager.py
-python3 test_voting_mechanism.py
-python3 test_treasury_manager.py
-
-# All tests should pass
-```
-
-## Phase 3: Initial Configuration
-
-### 3.1 Add Node Handlers
-```python
-# Run this script to add your existing Node Handlers
-from contracts.proposal_manager import ProposalManager
-
-proposal_manager = ProposalManager()
-
-# Add your Node Handlers (replace with actual addresses)
-node_handlers = [
-    "0x1234567890123456789012345678901234567890",  # Node Handler 1
-    "0x2345678901234567890123456789012345678901",  # Node Handler 2
-    "0x3456789012345678901234567890123456789012",  # Node Handler 3
-]
-
-for handler in node_handlers:
-    proposal_manager.add_node_handler(handler)
-    print(f"Added Node Handler: {handler}")
-```
-
-### 3.2 Setup Treasury Committee
-```python
-# Run this script to setup treasury committee
-from contracts.treasury_manager import TreasuryManager
-
-treasury_manager = TreasuryManager()
-
-# Add treasury committee members (replace with actual addresses)
-committee_members = [
-    "0x4567890123456789012345678901234567890123",  # Treasury Admin 1
-    "0x5678901234567890123456789012345678901234",  # Treasury Admin 2
-    "0x6789012345678901234567890123456789012345",  # Treasury Admin 3
-]
-
-for member in committee_members:
-    treasury_manager.add_committee_member(member)
-    print(f"Added Treasury Committee Member: {member}")
-```
-
-### 3.3 Fund Initial Treasury (Corrected HRV Valuation Model)
-```python
-# Corrected treasury setup - HRV gets value from ADA backing only
-from contracts.treasury_manager import TreasuryManager
-
-treasury_manager = TreasuryManager()
-
-# Phase 1: Current Bootstrap (2025) - HRV coins have NO standalone value
-treasury_manager.add_asset("HRV", 50_000_000, 0.00)  # 50M HRV coins, no backing = $0 value
-print("✅ Added 50M HRV coins to treasury (governance function only)")
-print("💰 Current treasury value: $0 (HRV has no backing yet)")
-print("🗳️  HRV function: Governance voting and proposal rights only")
-
-# Note: Project Catalyst 100K ADA (if approved) is for DEVELOPMENT COSTS:
-# - Developer payments, smart contract audits, AI credits, operational expenses
-# NOT for DAO treasury backing!
-
-# Phase 2: QSTP Enhancement (Q1 2026) - ADA backing gives HRV value!
-print("\n🚀 QSTP Funding Roadmap (Q1 2026):")
-print("- Joining Qatar Science and Technology Park")
-print("- AI & Blockchain business: Compu-AId & ALSYS")
-print("- Budget request: $100,000 worth of ADA for treasury backing")
-
-# Calculate HRV value with ADA backing
-ada_backing_usd = 100_000  # $100K worth of ADA
-hrv_supply = 50_000_000    # 50M HRV coins
-hrv_value_per_coin = ada_backing_usd / hrv_supply  # $0.002 per HRV
-
-print(f"\n💰 HRV Valuation with QSTP ADA Backing:")
-print(f"- ADA backing: ${ada_backing_usd:,}")
-print(f"- HRV supply: {hrv_supply:,} coins")
-print(f"- HRV value per coin: ${hrv_value_per_coin:.4f} (0.2 cents)")
-print(f"- Total treasury value: ${ada_backing_usd:,} (all from ADA backing)")
-
-# Current growth strategy (until QSTP)
-print("\n🎯 Current Treasury Growth Strategy (2025):")
-print("- Build community governance with HRV coins")
-print("- Establish voting mechanisms and proposal processes")
-print("- Prepare for ADA backing through QSTP application")
-print("- No monetary value until backing is secured")
-
-# Enhanced strategy with QSTP
-print("\n🌟 Enhanced Strategy with QSTP (2026+):")
-print("- $100K ADA backing gives HRV coins real value")
-print("- Additional backing increases HRV value proportionally")
-print("- ADA staking generates yield to grow backing pool")
-print("- Partnership revenues add to backing assets")
-
-# Treasury backing growth scenarios
-print("\n📈 HRV Value Growth Scenarios:")
-print("- $200K backing → $0.004 per HRV (double value)")
-print("- $500K backing → $0.01 per HRV (5x value)")
-print("- $1M backing → $0.02 per HRV (10x value)")
-
-# Set up preparation for QSTP funding
-treasury_manager.prepare_qstp_funding_proposal()
-print("✅ Prepared QSTP funding proposal templates")
-
-# Future yield strategies (post-QSTP)
-ada_amount = ada_backing_usd / 0.50  # ~200K ADA at $0.50
-staking_amount = ada_amount * 0.8    # Stake 80%
-annual_yield = staking_amount * 0.052  # 5.2% APY
-
-print(f"⏳ QSTP yield strategy: Stake {staking_amount:,.0f} ADA @ 5.2% APY")
-print(f"⏳ Expected annual yield: {annual_yield:,.0f} ADA (${annual_yield * 0.50:,.0f})")
-print("⏳ Yield increases backing pool, raising HRV value over time")
-```
-
-**Corrected Understanding:**
-- **2025**: HRV coins = governance rights only, $0 treasury value
-- **Q1 2026**: $100K ADA backing gives HRV coins $0.002 value each
-- **2026+**: Growing backing pool increases HRV value proportionally
-
-**HRV is a governance token backed by treasury assets, not a standalone currency!** This is a much more honest and sustainable model. 💪
-
-## Phase 4: Web Interface Deployment
-
-### 4.1 Setup Interface Environment
-```bash
-cd ../harvest-dao-interface/
-npm install
-# or
+cd harvest-dao-package/harvest-dao-interface
 pnpm install
+pnpm dev        # http://localhost:5173
 ```
 
-### 4.2 Configure Environment Variables
+Its environment variables must describe a Cardano deployment, not an EVM one:
+
 ```bash
-# Create .env file
-cat > .env << EOF
-VITE_HARVEST_RPC_URL=your_harvest_sidechain_rpc_url
-VITE_GOVERNANCE_CONTRACT_ADDRESS=deployed_governance_contract_address
-VITE_PROPOSAL_CONTRACT_ADDRESS=deployed_proposal_contract_address
-VITE_VOTING_CONTRACT_ADDRESS=deployed_voting_contract_address
-VITE_TREASURY_CONTRACT_ADDRESS=deployed_treasury_contract_address
-VITE_CHAIN_ID=your_chain_id
-EOF
+# Replaces the old VITE_HARVEST_RPC_URL / VITE_CHAIN_ID / *_CONTRACT_ADDRESS block.
+VITE_CARDANO_NETWORK=preprod
+VITE_BLOCKFROST_PROJECT_ID=...
+VITE_GOVERNANCE_SCRIPT_HASH=...
+VITE_TREASURY_SCRIPT_HASH=...
 ```
 
-### 4.3 Test Locally
-```bash
-npm run dev
-# or
-pnpm run dev
+Serving the production build (`pnpm build`, then Vercel/Netlify/static host) is unchanged from before and is
+the one part of the old document that still holds.
 
-# Open http://localhost:5173 to test the interface
-```
+## 9. Security checklist
 
-### 4.4 Build for Production
-```bash
-npm run build
-# or
-pnpm run build
+- [ ] Keys generated and stored offline; no key material in the repo or in CI
+- [ ] Treasury spends require the agreed quorum — as a native script or in the validator, tested
+- [ ] Timelocks implemented via validity intervals and a deadline datum, and tested
+- [ ] Every validator has failure tests, not only success tests
+- [ ] The Python specification and the Aiken implementation are checked against each other, rule by rule
+- [ ] No private key, mnemonic or seed phrase appears in any document in this repository
 
-# This creates a 'dist' folder with production files
-```
+## What was removed
 
-### 4.5 Deploy to Web Server
-
-**Option A: Deploy to Vercel**
-```bash
-npm install -g vercel
-vercel --prod
-```
-
-**Option B: Deploy to Netlify**
-```bash
-npm install -g netlify-cli
-netlify deploy --prod --dir=dist
-```
-
-**Option C: Deploy to Your Server**
-```bash
-# Upload dist folder to your web server
-scp -r dist/* user@your-server:/var/www/dao.harvest.com/
-```
-
-## Phase 5: Integration with Existing HARVEST Infrastructure
-
-### 5.1 Update HARVEST Node Configuration
-```json
-// Add to your existing HARVEST node config
-{
-  "governance": {
-    "enabled": true,
-    "contracts": {
-      "governance_token": "deployed_governance_contract_address",
-      "proposal_manager": "deployed_proposal_contract_address",
-      "voting_mechanism": "deployed_voting_contract_address",
-      "treasury_manager": "deployed_treasury_contract_address"
-    },
-    "node_handler_key": "your_node_handler_private_key"
-  }
-}
-```
-
-### 5.2 Update Website Navigation
-```html
-<!-- Add to your existing HARVEST website -->
-<nav>
-  <a href="https://harvest.com">Home</a>
-  <a href="https://dao.harvest.com">DAO Governance</a>
-  <a href="https://harvest.com/explorer">Explorer</a>
-</nav>
-```
-
-### 5.3 API Integration (Optional)
-```python
-# Add to your existing HARVEST backend
-from harvest_dao.contracts.governance_token import GovernanceToken
-from harvest_dao.contracts.proposal_manager import ProposalManager
-
-def get_user_voting_power(user_address):
-    governance = GovernanceToken()
-    return governance.get_voting_power(user_address)
-
-def get_active_proposals():
-    proposals = ProposalManager()
-    return proposals.get_active_proposals()
-```
-
-## Phase 6: Security and Testing
-
-### 6.1 Security Checklist
-- [ ] All private keys are securely stored
-- [ ] Multi-signature wallets are properly configured
-- [ ] Timelock mechanisms are active
-- [ ] Access controls are properly set
-- [ ] All contracts have been tested
-
-### 6.2 Functional Testing
-```bash
-# Test complete governance workflow
-cd tests/
-python3 integration_test.py
-
-# Test web interface
-# 1. Connect wallet
-# 2. Create a test proposal
-# 3. Cast votes
-# 4. Verify treasury operations
-```
-
-### 6.3 Load Testing
-```bash
-# Test with multiple concurrent users
-# Verify performance under load
-# Check gas optimization
-```
-
-## Phase 7: Launch Preparation
-
-### 7.1 Community Preparation
-- [ ] Announce DAO launch to community
-- [ ] Prepare governance documentation
-- [ ] Create tutorial videos
-- [ ] Set up community support channels
-
-### 7.2 Initial Governance Setup
-```python
-# Create first governance proposal
-proposal_manager.submit_proposal(
-    title="DAO Launch Proposal",
-    description="Official launch of HARVEST DAO governance",
-    execution_data="0x",  # No execution needed
-    proposer="your_address"
-)
-```
-
-### 7.3 Monitor Launch
-- [ ] Monitor contract events
-- [ ] Track user adoption
-- [ ] Monitor treasury operations
-- [ ] Collect community feedback
-
-## Phase 8: Post-Launch Operations
-
-### 8.1 Regular Maintenance
-```bash
-# Weekly checks
-python3 scripts/health_check.py
-
-# Monthly treasury reports
-python3 scripts/treasury_report.py
-
-# Quarterly governance review
-python3 scripts/governance_metrics.py
-```
-
-### 8.2 Upgrades and Improvements
-- Monitor community feedback
-- Plan governance parameter adjustments
-- Implement new features based on usage
-- Regular security reviews
-
-## Troubleshooting
-
-### Common Issues
-
-**Contract Deployment Fails**
-```bash
-# Check gas limits and network connection
-# Verify deployer account has sufficient funds
-# Check for network congestion
-```
-
-**Interface Won't Connect**
-```bash
-# Verify environment variables
-# Check wallet network configuration
-# Confirm contract addresses are correct
-```
-
-**Voting Not Working**
-```bash
-# Verify user has HRV tokens
-# Check if proposal is in voting phase
-# Confirm wallet is connected to correct network
-```
-
-## Support Contacts
-
-- Technical Issues: Check documentation in `docs/`
-- Integration Help: Review deployment guide
-- Community Support: HARVEST Discord/Telegram
-
-## Success Metrics
-
-After deployment, monitor:
-- [ ] Number of active governance participants
-- [ ] Proposal submission rate
-- [ ] Voting participation percentage
-- [ ] Treasury performance
-- [ ] Community engagement levels
-
-Your HARVEST DAO is now ready for launch! 🚀
-
+The old Phase 3.3 "Fund Initial Treasury" block, which added 50,000,000 HRV to the treasury at `$0.00` and
+then computed an HRV price of $0.002 from a $100,000 ADA backing. Supply, price and asset were all wrong. See
+`corrected_hrv_valuation.md`.

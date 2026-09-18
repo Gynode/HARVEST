@@ -1,149 +1,44 @@
-# HARVEST DAO - Changelog
+# HARVEST DAO — Changelog
 
-## Version 2.0 - Final Implementation (Current)
+This package's documents have changed models twice, both times because the earlier model was wrong. This file
+exists so the superseded numbers are not reintroduced.
 
-### 🔄 Major Corrections
+## 2026-09-18 — Platform and token model settled
 
-#### HRV Valuation Model Fixed
-- **BEFORE**: HRV tokens had arbitrary $0.01 value
-- **AFTER**: HRV coins have no standalone value, only backed value
-- **IMPACT**: Honest, sustainable valuation model
+Decisions taken by the project owner:
 
-#### Treasury Setup Corrected
-- **BEFORE**: Unrealistic millions in initial funding
-- **AFTER**: 50M HRV coins + $100K ADA backing from QSTP
-- **IMPACT**: Realistic, achievable treasury goals
+- **Platform: Cardano/Plutus.** On-chain code is to be written in **Aiken**.
+- **HRV supply: 1,000,000,000, minted on Cardano mainnet as a Cardano Native Token (CNT).** The
+  **50,000,000** figure used throughout this package was wrong — in both amount and model.
+- **There is no second supply.** The sidechain represents the CNT locked on mainnet; it does not mint its own
+  HRV.
+- **HRV value: none.** The treasury is unfunded and still has to be funded with **actual fiat**. The
+  `$0.01` / `$0.002` / `$500,000` figures are removed as void.
+- **Remaining supply is unknown** — two wallets were lost after the mint, so the amount left has to be read
+  off another machine. How a lost wallet is treated on-chain is undecided.
 
-#### QSTP Integration Added
-- **NEW**: Qatar Science and Technology Park roadmap
-- **NEW**: Q1 2026 funding opportunity ($100K ADA)
-- **NEW**: Regional expansion strategy
+Documents rewritten:
 
-### 📊 Updated Calculations
+| File | Change |
+|------|--------|
+| `corrected_hrv_valuation.md` | Replaced with the settled model; void arithmetic listed explicitly |
+| `updated_qstp_treasury_summary.md` | Reduced to the true current configuration: unfunded, $0 |
+| `qstp_treasury_roadmap.md` | Strategy kept; all treasury-value projections removed, asset marked unconfirmed |
+| `dao_deployment_steps.md` | **Rewritten from scratch** — was an EVM/web3 procedure, now Cardano/Aiken |
+| `README.md` | Corrected supply, value and toolchain; removed the zip/`pip install web3` quick start |
 
-#### HRV Value with Backing
-```
-$100,000 ADA backing ÷ 50,000,000 HRV coins = $0.002 per HRV
-```
+Also corrected: `harvest_blockchain_architecture.md` §4 and §6.1, and the token-supply sentence in
+`harvest_dao/docs/technical_documentation.md` and `blockchain/documentation/technical_documentation.md`.
 
-#### Treasury Timeline
-- **2025**: $0 treasury (HRV governance only)
-- **Q1 2026**: $100K treasury (ADA backing)
-- **2027+**: Growing treasury through community and partnerships
+## Version 2.0 — "Corrected HRV valuation" (superseded)
 
-### 🛠️ Technical Updates
+Removed v1.0's fantasy treasury (10M USDC, 5M ADA) and replaced arbitrary pricing with a backing-derived
+model. **The shape was right; every number was wrong.** It kept a 50M supply, kept ADA as the backing asset
+when funding is to be fiat, left the treasury documents asserting a $500K valuation that the valuation
+document contradicted, and specified an EVM deployment for a Cardano project. Marked "Final Implementation"
+at the time; it was not.
 
-#### Smart Contracts
-- ✅ Corrected treasury valuation logic
-- ✅ Added QSTP funding preparation functions
-- ✅ Updated yield strategy calculations
-- ✅ Fixed HRV coin terminology throughout
+## Version 1.0 — Initial implementation (deprecated)
 
-#### Web Interface
-- ✅ Updated treasury display with correct values
-- ✅ Added QSTP roadmap information
-- ✅ Corrected HRV valuation explanations
-- ✅ Enhanced growth scenario projections
-
-#### Documentation
-- ✅ Complete rewrite of treasury sections
-- ✅ Added QSTP strategic documentation
-- ✅ Corrected all HRV value references
-- ✅ Updated deployment steps with realistic values
-
-### 🎯 Strategic Improvements
-
-#### Honest Approach
-- **Removed**: Fantasy treasury amounts
-- **Added**: Realistic funding projections
-- **Result**: Credible, achievable plan
-
-#### Regional Focus
-- **Added**: QSTP partnership strategy
-- **Added**: Middle East expansion plan
-- **Result**: Clear path to institutional backing
-
-#### Community-Driven
-- **Enhanced**: Organic growth mechanisms
-- **Added**: Community funding proposals
-- **Result**: Sustainable, participatory model
-
----
-
-## Version 1.0 - Initial Implementation (Deprecated)
-
-### ❌ Issues Identified
-
-#### Unrealistic Treasury
-- Fantasy amounts: 10M USDC, 5M ADA
-- Arbitrary HRV pricing at $0.01
-- No clear funding source
-
-#### Incorrect Valuation
-- HRV treated as standalone currency
-- No backing mechanism explained
-- Unsustainable economic model
-
-#### Missing Strategy
-- No clear funding roadmap
-- No institutional partnerships
-- Limited growth mechanisms
-
-### 🔧 What Was Fixed
-
-1. **Treasury Reality Check**: Removed unrealistic amounts
-2. **HRV Valuation**: Implemented backing-based model
-3. **QSTP Integration**: Added institutional partnership
-4. **Growth Strategy**: Created sustainable expansion plan
-5. **Documentation**: Complete rewrite with corrections
-
----
-
-## Migration Guide (v1.0 → v2.0)
-
-### For Developers
-1. **Update Treasury Logic**: Use new backing-based valuation
-2. **Implement QSTP Functions**: Add funding preparation code
-3. **Correct HRV References**: Change "tokens" to "coins"
-4. **Update Tests**: Reflect new valuation model
-
-### For Community
-1. **Understand New Model**: HRV value comes from backing
-2. **Prepare for QSTP**: Q1 2026 funding opportunity
-3. **Participate in Growth**: Community contributions matter
-4. **Realistic Expectations**: Honest, sustainable approach
-
-### For Stakeholders
-1. **Review New Projections**: Realistic treasury growth
-2. **QSTP Opportunity**: Institutional backing potential
-3. **Regional Strategy**: Middle East expansion plan
-4. **Long-term Vision**: Sustainable DAO development
-
----
-
-## Future Roadmap
-
-### Q4 2025
-- [ ] Deploy corrected DAO implementation
-- [ ] Build community governance
-- [ ] Prepare QSTP application materials
-
-### Q1 2026
-- [ ] Join Qatar Science and Technology Park
-- [ ] Submit $100K ADA funding request
-- [ ] Launch regional expansion initiatives
-
-### Q2-Q4 2026
-- [ ] Implement ADA backing if approved
-- [ ] Launch yield strategies
-- [ ] Expand partnership network
-
-### 2027+
-- [ ] Scale treasury through community growth
-- [ ] Establish regional blockchain leadership
-- [ ] Explore additional funding opportunities
-
----
-
-**This changelog documents the evolution from unrealistic projections to honest, sustainable DAO implementation.** 📈
-
+Treasury of 10M USDC and 5M ADA with HRV priced arbitrarily at $0.01. No funding source. Deprecated in v2.0
+for being unrealistic.

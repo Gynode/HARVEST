@@ -14,18 +14,18 @@ On-chain code is written in **Aiken** (decided 2026-09-18). It compiles to Plutu
 ledger as Plutus Tx — it is not a separate chain.
 
 ```bash
-# Install Aiken (see aiken-lang.org for the current instructions)
+# Aiken — INSTALLED 2026-09-19 as v1.1.23, at C:\Users\gydan\.aiken\bin (on the user PATH).
+# It came via aikup, the version manager: npm install -g @aiken-lang/aikup, then `aikup`.
 aiken --version
 
-# Tools you will also need
+# Tools you will also need, and which are NOT installed yet
 #   - a Cardano node (or a provider such as Blockfrost / Koios / Maestro)
 #   - cardano-cli, or a transaction builder (Lucid, Mesh)
 ```
 
 ## 2. Design before code
 
-**Settled 2026-09-19.** See `onchain_design.md` for the reasoning, and for the items still open (how the
-treasury relates to fiat; the quorum denominator; partial versus all-or-nothing delegation).
+**All settled 2026-09-19.** Reasoning in `onchain_design.md`. Nothing here blocks anything any more.
 
 - [x] **What is on-chain.** On-chain: proposal lifecycle, voting-power snapshot commitment, vote tally,
       treasury spend authorisation, and governance parameters. Off-chain: proposal title and description,
@@ -46,9 +46,22 @@ treasury relates to fiat; the quorum denominator; partial versus all-or-nothing 
       of locked CNT, so sidechain governance would make the Node Handler set the final authority over the
       treasury. The sidechain consumes governance decisions through the Chain Follower.
 
-**One consequence worth noting:** because quorum should be denominated against a governance-set
-`voting_supply` parameter rather than the minted 1,000,000,000, the lost-wallet figure does not block the
-validators — only the initial numeric values in the config datum.
+- [x] **What the treasury holds — on-chain assets only, with fiat converted on entry.** A script address can
+      custody ADA and native tokens and nothing else; it cannot hold a bank balance. The DAO therefore has
+      **one** treasury, on-chain, and fiat becomes an on-chain asset before it reaches it. Two consequences
+      are recorded in `onchain_design.md` §C and belong in the treasury documents: the backing is whatever the
+      fiat was converted *into* (exposed to that issuer, not to the currency), and the conversion step itself
+      is off-chain and unverifiable by any script.
+- [x] **The quorum denominator — a governance-set `voting_supply` parameter.** No threshold is ever computed
+      against the minted 1,000,000,000.
+- [x] **Delegation — all-or-nothing.** Delegating hands over the whole position, as Cardano's own stake
+      delegation does. `amount` and `min_delegation_amount` are **not** ported: the Python validated an amount
+      that `get_voting_power()` then ignored.
+
+**One consequence worth noting:** because quorum is denominated against a governance-set `voting_supply`
+parameter rather than the minted supply, the lost-wallet figure does not block the validators — only the
+initial value of that one parameter, which governance can correct afterwards. **Nothing in this section
+blocks the Aiken work any more.**
 
 ## 3. Build the validators
 

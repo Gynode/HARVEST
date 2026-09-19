@@ -189,6 +189,9 @@ The five questions that blocked the Aiken work are answered. Full reasoning in
 | **1. On-chain / off-chain split** | On-chain: proposal lifecycle, snapshot commitment, vote tally, treasury authorisation, parameters. Off-chain: proposal text, snapshot construction, UI, reporting. |
 | **2. Treasury custody** | **Aiken validator *plus* M-of-N treasury-committee signatures** (`tx.extra_signatories`). The validator checks the proposal UTxO is spent in the same transaction, its datum says `Passed`, and recipient and amount match; the timelock is `tx.validity_range` against a deadline in the proposal datum. A native script was rejected: it cannot read a datum or inspect a transaction, so it can never tie a spend to a specific proposal. |
 | **3. Voting power** | **A snapshot committed in the proposal datum**, read directly by the validator — nothing to trust at this electorate size. Merkle root is the migration path once the map outgrows the transaction size limit. |
+| **Fiat and the treasury** | **One treasury, on-chain, with fiat converted on entry.** A script address custodies ADA and native tokens and nothing else — it cannot hold a bank balance. Recorded with the decision: the backing is whatever the fiat was converted *into* (exposed to that issuer, not to the currency), and the conversion step is off-chain and unverifiable by any script. |
+| **Quorum basis** | **A governance-set `voting_supply` parameter** — never the minted 1,000,000,000. `voting_supply` starts at the snapshot total and governance can correct it as lost wallets are confirmed. |
+| **Delegation** | **All-or-nothing** — the whole position, as Cardano's own stake delegation. `amount` and `min_delegation_amount` are **not** ported; the Python validated an amount that `get_voting_power()` then ignored. |
 
 **The specification contradicts itself, and this was not previously recorded.** `proposal_manager.py` and
 `voting_mechanism.py` are not two halves of one system — each is a complete voting implementation, and they
@@ -223,29 +226,24 @@ Do not resolve any of these by assumption.
    amounts (100,000 ADA / "$100,000 worth of ADA"). The amount and asset of the actual request must be
    restated before the document is used for an application. Note also that earlier drafts ran together two
    different funding routes — Project Catalyst (development costs) and QSTP (treasury backing).
-3. **The treasury cannot hold fiat, and three documents say it does.** A Plutus validator and a Cardano
-   native script can custody ADA and native tokens; neither can hold a bank balance. So "the treasury" is
-   either an on-chain script holding a converted asset, or an off-chain entity whose decisions the DAO
-   records — and `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
-   `updated_qstp_treasury_summary.md` all use the word without distinguishing them. See `onchain_design.md`
-   §C.
-4. **The quorum denominator, and the delegation rule.** Both are argued in `onchain_design.md` §D and §3 but
-   not confirmed: whether quorum is a share of a governance-set `voting_supply` (recommended) or of the
-   minted supply, and whether delegation is partial-amount or all-or-nothing. The Python `delegate()` takes
-   an `amount` and then ignores it, so neither rule exists in the specification today.
-5. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*
+3. **Three documents describe the treasury as holding fiat.** The decision is that it holds on-chain assets
+   with fiat converted on entry (§3.2), but `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
+   `updated_qstp_treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
+   without saying it becomes a converted asset first. A reader is entitled to assume otherwise, which the
+   chain cannot deliver. The wording pass is owed. See `onchain_design.md` §C.
+4. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*
    sidechain-era site with a whitepaper. Adding it to this repo as-is would create a gitlink with no
    `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was done —
    it is ignored. Now that the repo-root site has been rewritten, decide whether `website/`'s whitepaper
    content should be folded into it, kept separate, or dropped.
-7. **`treasury_manager.py`'s demo still claims a funded treasury.** Its `__main__` block prints a **$47.5M
+5. **`treasury_manager.py`'s demo still claims a funded treasury.** Its `__main__` block prints a **$47.5M
    treasury** — 300,000,000 HRV at $0.10, 10M USDC, 5M ADA at $0.50, 5M DAI — with Compound and Yearn yield
    strategies and an `AssetType.LP_TOKEN`. Every part of that contradicts settled decisions: the treasury is
    unfunded, HRV has no value, and DAI/Compound/Yearn are not on Cardano. The documents were corrected on
    2026-09-18; this demo block was missed, so running the contract as §4 instructs still prints a funded
    treasury with a price. `onchain_design.md` gives the fix: reduce the demo to the true configuration and
    drop the non-Cardano assets.
-8. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
+6. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
    npm run build` succeeds on Node 20, the built site serves, and the publish step was simulated against a
    local bare repository (77 files, `.nojekyll` included, `gh-pages` receiving a valid site root). It has never
    run in Actions. **Verified again 2026-09-19 against the live site:** `https://gynode.github.io/HARVEST/`
@@ -273,6 +271,12 @@ python blockchain/blockchain_code/tools/harvest_cli.py --help
 # DAO interface
 cd blockchain/harvest_dao_package/harvest-dao-interface
 pnpm install && pnpm dev
+
+# Aiken — installed 2026-09-19 as v1.1.23 at C:\Users\gydan\.aiken\bin (user PATH)
+aiken --version
+aiken new harvest_dao && cd harvest_dao   # nothing has been created yet
+aiken build      # compiles; emits plutus.json (CIP-57 blueprint)
+aiken check      # runs the test blocks
 ```
 
 Python standard library only — no `requirements.txt`, no virtualenv, no pinned versions anywhere in the
@@ -315,9 +319,10 @@ Python will execute on Cardano.
 The documents are now in line with the settled decisions (§3.1, §3.2). **The on-chain design is settled, so
 Aiken can be written** — that was the gate. The starting points are:
 
-1. **Install Aiken.** It is not on this machine (`aiken`, `cardano-cli` and `pnpm` were all still missing on
-   2026-09-19). Nothing in step 2 can be compiled or tested without it.
-2. **Write the validators in Aiken**, porting the behaviour from the Python specification rather than
+1. **Write the validators in Aiken.** Aiken was installed on 2026-09-19 (v1.1.23, via `aikup`), so this is
+   unblocked. `cardano-cli` and `pnpm` are still missing, and are needed only from §5 onward — deploying to a
+   testnet, and running the interface.
+2. **Port the behaviour from the Python specification** rather than
    translating the Python. Per §3.2, port vote parameters from `voting_mechanism.py` and the lifecycle from
    `proposal_manager.py`, and do not reproduce `get_voting_power()`'s delegation bug.
 3. **Build in this order**: the **bridge locking validator** first — the sidechain's HRV is a representation
@@ -326,4 +331,4 @@ Aiken can be written** — that was the gate. The starting points are:
    P2P, storage, and the Chain Follower.
 4. **Somewhere along the way, two smaller jobs:** find the remaining HRV supply (§3.3, item 1 — no longer
    blocking, but the `voting_supply` parameter wants a real number), and fix `treasury_manager.py`'s demo,
-   which still prints a funded $47.5M treasury with EVM assets and an HRV price (§3.3, item 7).
+   which still prints a funded $47.5M treasury with EVM assets and an HRV price (§3.3, item 5).

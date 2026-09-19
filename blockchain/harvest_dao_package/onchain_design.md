@@ -1,7 +1,7 @@
 # On-chain design — the decisions that block the Aiken validators
 
-**Written 2026-09-19.** Status: **A, B, and §2's three questions are SETTLED** (see below). C, D and the
-delegation sub-decision are argued but not yet confirmed — they are marked **[open]** in their sections.
+**Written 2026-09-19.** Status: **ALL SETTLED** — A, B, C, D, §2's three questions, and the delegation
+sub-decision. Nothing in this document blocks the Aiken work any more.
 
 ## Decisions taken 2026-09-19
 
@@ -9,9 +9,12 @@ delegation sub-decision are argued but not yet confirmed — they are marked **[
 |---|---|
 | **A. Host ledger** | **Cardano (A1).** Validators and DAO state on Cardano. The sidechain consumes governance decisions through the Chain Follower; it does not decide. |
 | **B. Specification** | **`voting_mechanism.py` for vote parameters and weighting** — per-type quorum and approval, snapshot-honoured power. **`proposal_manager.py` for the lifecycle only.** The duplicate vote paths in `proposal_manager.py` are to be removed so there is one specification. |
+| **C. Fiat and the treasury** | **On-chain treasury only, with fiat converted on entry (C1).** One treasury: a script address holding ADA and native tokens. Fiat is converted off-chain into an on-chain asset before it reaches the treasury. |
+| **D. Quorum basis** | **A governance-set `voting_supply` parameter (D2).** No threshold is ever computed against the minted 1,000,000,000. |
 | **§2.1 On/off-chain split** | **On-chain:** proposal lifecycle, snapshot commitment, tally, treasury authorisation, parameters. **Off-chain:** proposal text, snapshot construction, UI, reporting. |
 | **§2.2 Treasury custody** | **Validator + committee signatures (2c).** The Aiken validator enforces the proposal check *and* requires M-of-N committee signatures via `tx.extra_signatories`. Timelock via `tx.validity_range`. |
 | **§2.3 Voting power** | **Snapshot committed in the proposal datum (3b).** Power is frozen at proposal creation and read directly by the validator — no proof needed, nothing to trust at this electorate size. Merkle root (3c) is the migration path. |
+| **§2.3b Delegation** | **All-or-nothing (3b-i).** Delegating hands over the whole position, as Cardano's own stake delegation does. `amount` and `min_delegation_amount` are removed from the ported rules, not reproduced. |
 
 Each decision's reasoning is in its section below. `dao_deployment_steps.md` §2 is updated to match.
 
@@ -27,12 +30,12 @@ The order below is the order they have to be settled in. **A is not currently on
 |---|----------|--------|
 | **A** | Which ledger hosts the DAO — Cardano, or the HARVEST sidechain? | **SETTLED — Cardano (A1)** |
 | **B** | The Python spec contains two contradictory voting implementations. Which is the specification? | **SETTLED — `voting_mechanism.py` for parameters, `proposal_manager.py` for lifecycle** |
-| **C** | Does the on-chain treasury hold fiat? It cannot. | **[open]** — recommendation C3 |
-| **D** | How is quorum denominated, given the supply is unknown? | **[open]** — recommendation D2, and it unblocks the supply question |
+| **C** | Does the on-chain treasury hold fiat? It cannot. | **SETTLED — on-chain only, fiat converted on entry (C1)** |
+| **D** | How is quorum denominated, given the supply is unknown? | **SETTLED — governance-set `voting_supply` (D2)** |
 | **1** | What is on-chain versus off-chain? | **SETTLED** |
 | **2** | Treasury custody: native script or Plutus validator? | **SETTLED — validator + committee sigs (2c)** |
 | **3** | Voting power's source of truth | **SETTLED — snapshot in the proposal datum (3b)** |
-| **3b** | Delegation: partial-amount or all-or-nothing? | **[open]** — see B and §3 |
+| **3b** | Delegation: partial-amount or all-or-nothing? | **SETTLED — all-or-nothing** |
 
 ---
 
@@ -112,7 +115,7 @@ other way.
 
 ---
 
-## C. The treasury cannot hold fiat, and the model says it must — **[open]**
+## C. The treasury cannot hold fiat, and the model says it must — **SETTLED: C1**
 
 `corrected_hrv_valuation.md` settles that value comes from funding the treasury "with **actual fiat**". A
 Plutus validator cannot custody fiat. Neither can a Cardano native script. A script address holds ADA and
@@ -127,17 +130,32 @@ So one of these has to be true, and they are not the same design:
 | **C2. The treasury is off-chain; the DAO records it** | The DAO's validators govern only on-chain assets. The fiat treasury is a legal/off-chain entity, and the DAO's on-chain state is a set of *decisions* about it, enforced by the committee in the real world. The validator can authorise a payment; nothing makes the payment happen. |
 | **C3. Both** — an on-chain treasury for on-chain assets and an off-chain one for fiat | Honest, but "the treasury" now names two things and every document must say which. |
 
-**Recommendation: C3, stated explicitly.** It is what the situation actually is, and naming it prevents the
-most expensive failure mode available here — a validator that is believed to hold $100,000 and holds nothing,
-or an off-chain payment that is believed to be trustless and is not.
+**Adopted: C1 — one treasury, on-chain, with fiat converted on entry.** The validators govern a single script
+address holding ADA and native tokens. Fiat is converted off-chain into an on-chain asset before it reaches the
+treasury, and only that asset is ever custodied on-chain.
 
-**This is also a documentation obligation:** `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
-`updated_qstp_treasury_summary.md` all speak of "the treasury" without distinguishing the two. Until they do,
-"30% of the treasury is backed" has no defined referent.
+**Two consequences to hold onto, because they are the cost of C1 and neither is obvious from the word
+"backed":**
+
+1. **The backing is whatever the fiat became.** If fiat is converted into a stablecoin CNT, then HRV is backed
+   by that issuer's promise, not by the currency that was paid in. The validator cannot tell the difference; a
+   depeg or a freeze is not visible to it.
+2. **The conversion is the trust hole.** "Fund the treasury with fiat" is, in C1, a two-step process whose
+   first step is off-chain, unverifiable by any script, and performed by whoever holds the fiat. The on-chain
+   half is trustless; the off-chain half is not, and it is the half where the money actually enters.
+
+Neither argues against C1 — they argue for stating it plainly, which is why they are recorded here rather than
+left as an assumption. The failure mode this avoids is the expensive one: a validator believed to hold
+$100,000 that holds nothing.
+
+**A documentation obligation follows:** `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
+`updated_qstp_treasury_summary.md` say value comes from funding "the treasury" with "actual fiat" without
+saying that the on-chain treasury holds a converted asset. Until they say so, "30% of the treasury is backed"
+has no defined referent — and a reader is entitled to assume the treasury holds fiat, which it cannot.
 
 ---
 
-## D. Quorum is denominated against the one number that is unknown — **[open]**
+## D. Quorum is denominated against the one number that is unknown — **SETTLED: D2**
 
 Both specifications compute quorum as a fraction of `total_supply = 1,000,000,000`:
 
@@ -157,9 +175,10 @@ be designed out rather than waited on:
 | **D2. A governance-set `voting_supply` parameter** in the config datum, adjustable by governance as wallets are confirmed lost | Explicit and auditable. The unknown becomes a parameter with a known update path, and the value can be set once the figure is read off the other machine. |
 | **D3. Absolute numbers** — quorum is "N HRV", set by governance | Simplest on-chain; no division, no rounding. Needs a governance process to set N. |
 
-**Recommendation: D2, with D1 as the initial value.** `voting_supply` starts as the snapshot total and can be
-corrected by governance when the lost wallets are resolved. Practically: **express quorum and approval
-thresholds against `voting_supply`, never against `total_supply`, in the validators.**
+**Adopted: D2**, with the snapshot total as its initial value — so D1 is where `voting_supply` starts and D2 is
+how it moves. `voting_supply` can be corrected by governance when the lost wallets are resolved. Practically:
+**express quorum and approval thresholds against `voting_supply`, never against `total_supply`, in the
+validators.**
 
 **Consequence — this is the important part:** the remaining-HRV-supply question **does not block the
 validators.** It blocks only the *initial numeric values* in the config datum, which are set at deployment
@@ -259,23 +278,28 @@ snapshot is just a trusted third party with extra steps:
 
 **Delegation, given B:** voting power is own + delegated-in − delegated-away. Two sub-decisions:
 
-1. **Where delegation lives.** An on-chain registry — a UTxO threaded by its own state NFT, updated by a
-   delegation transaction, read as a *reference input* (CIP-31) when the snapshot is committed — keeps the
-   snapshot verifiable and makes delegation a first-class on-chain fact. It costs one delegation update per
-   block, which is fine at this scale. The alternative, signed delegations folded into the snapshot
-   off-chain, is cheaper and makes the snapshot trusted. **Recommend the registry**, for the same reason as
-   above: the snapshot is only as good as what it can be checked against.
-2. **Partial or all-or-nothing** — see **B**. If all-or-nothing, remove `amount` and `min_delegation_amount`
-   from the ported rules rather than reproducing a parameter that does nothing.
+1. **Where delegation lives — the on-chain registry.** A UTxO threaded by its own state NFT, updated by a
+   delegation transaction, read as a *reference input* (CIP-31) when the snapshot is committed. It keeps the
+   snapshot verifiable and makes delegation a first-class on-chain fact, at the cost of one delegation update
+   per block — fine at this scale. The rejected alternative, signed delegations folded into the snapshot
+   off-chain, is cheaper and makes the snapshot trusted.
+2. **Partial or all-or-nothing — all-or-nothing.** Delegating hands over the whole position, as Cardano's own
+   stake delegation does. Consequently **`amount` and `min_delegation_amount` are not ported**: they described
+   something that does not happen, and reproducing them would carry a parameter that does nothing into the
+   validator. `min_delegation_amount = 1000` in particular has no meaning once there is no amount — if a
+   minimum position to delegate is wanted, it belongs on the balance, not on a delegation size.
 
 ---
 
-## What is unblocked right now
+## What is unblocked now
 
-Writing any of this in Aiken needs **A** first; **B** and **C** determine *what* is written. But **D** means
-the lost-wallet supply figure is not on the critical path, which changes the plan in `AGENTS.md` §6.
+Everything is settled, so **Aiken can be written.** Aiken itself was installed on 2026-09-19 (v1.1.23, via
+`aikup`), which was the other thing standing in the way.
 
-If A1, 2c, 3b and D2 are taken, the build order is:
+**D** means the lost-wallet supply figure is not on the critical path — a change from how `AGENTS.md` §6 and
+`dao_deployment_steps.md` §6 previously read.
+
+The build order is:
 
 1. **The bridge locking validator** — the sidechain's HRV is a representation of locked CNT, so nothing
    touching HRV works without it. Also the only piece whose design is already settled (§3.1 of `AGENTS.md`).

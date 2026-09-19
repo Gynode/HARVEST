@@ -164,7 +164,7 @@ affects only one parameter's initial value, not the validator logic. Aiken can b
 
 ## Still open
 
-The on-chain design is settled (above), so **nothing here blocks writing Aiken any more.**
+The on-chain design is settled and Aiken is installed, so **nothing here blocks writing validators.**
 
 1. **Remaining HRV supply** — two wallets were lost after the mint, so the amount actually left has to be
    read off another computer. Related and undecided: the repo-root site states "lost wallets are treated as
@@ -172,20 +172,20 @@ The on-chain design is settled (above), so **nothing here blocks writing Aiken a
    validators, only the initial value of the `voting_supply` parameter.
 2. **The QSTP request** — funding is to be fiat, but the roadmap previously specified ADA amounts. The
    amount and asset of the actual request must be restated before it is used for an application.
-3. **The treasury cannot hold fiat, and three documents say it does.** A Plutus validator can custody ADA and
-   native tokens; it cannot hold a bank balance. "The treasury" is therefore either an on-chain script holding
-   a converted asset or an off-chain entity the DAO records decisions about — and `corrected_hrv_valuation.md`,
-   `qstp_treasury_roadmap.md` and `updated_qstp_treasury_summary.md` all use the word without distinguishing
-   them. See `onchain_design.md` §C.
-4. **Two smaller design details** — the quorum denominator (a governance-set `voting_supply`, recommended,
-   versus the minted supply) and whether delegation is partial-amount or all-or-nothing. Both are argued in
-   `onchain_design.md` §D and §3.
-5. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site
+3. **Three documents describe the treasury as holding fiat.** The decision is that it holds on-chain assets
+   with fiat converted on entry (above), but `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
+   `updated_qstp_treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
+   without saying it becomes a converted asset first — which the chain cannot deliver. The wording pass is
+   owed. See `onchain_design.md` §C.
+4. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site
    with a whitepaper. Adding it as-is would create a gitlink with no `.gitmodules`; absorbing it would discard
    its history. It is ignored. Now that the repo-root site has been rewritten to the current direction, decide
    whether that whitepaper should be folded in, kept separate, or dropped.
-6. **Aiken is not installed.** `aiken`, `cardano-cli` and `pnpm` were all still absent on 2026-09-19. Nothing
-   can be compiled or tested without them.
+5. **`treasury_manager.py`'s demo still claims a funded treasury** — it prints a $47.5M treasury with USDC,
+   DAI, Compound and Yearn, contradicting the settled position that the treasury is unfunded, HRV has no
+   value, and the platform is Cardano. `AGENTS.md` §3.3 item 5.
+6. **Still missing: `cardano-cli` and `pnpm`.** Not needed to write validators, but needed to deploy to a
+   testnet and to run the interface.
 7. **The push to `main`, and one Pages setting.** Everything is pushed — `main` is at `77d98a2`, and
    `gh-pages` exists at `7e97f12`. **Verified again 2026-09-19:** `https://gynode.github.io/HARVEST/` still
    serves the Jekyll-rendered repository markdown (links to `AGENTS.html` and `CLAUDE.html`, no Docusaurus

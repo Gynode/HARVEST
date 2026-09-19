@@ -47,3 +47,10 @@ manus-website-update_node_handler_rewards/
 
 # Archives (source material is tracked unzipped under blockchain/)
 *.zip
+
+# Secrets. This repository is PUBLIC, so a committed .env is a published .env.
+# The `.env.local` and `.env.*.local` rules inherited from the Docusaurus
+# template do NOT cover a plain `.env`, which is exactly what gets copied in.
+.env
+.env.*
+!.env.example

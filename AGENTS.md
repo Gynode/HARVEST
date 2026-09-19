@@ -267,13 +267,6 @@ Do not resolve any of these by assumption.
    2026-09-18; this demo block was missed, so running the contract as §4 instructs still prints a funded
    treasury with a price. `onchain_design.md` gives the fix: reduce the demo to the true configuration and
    drop the non-Cardano assets.
-6. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
-   npm run build` succeeds on Node 20, the built site serves, and the publish step was simulated against a
-   local bare repository (77 files, `.nojekyll` included, `gh-pages` receiving a valid site root). It has never
-   run in Actions. **Verified again 2026-09-19 against the live site:** `https://gynode.github.io/HARVEST/`
-   still serves the Jekyll-rendered repository markdown (links to `AGENTS.html` and `CLAUDE.html`, no
-   Docusaurus assets), so the repoint has not happened. The Pages source must be moved from `main` to
-   `gh-pages` — see §5.
 
 ---
 
@@ -313,11 +306,17 @@ repository.
 - **Remote:** `https://github.com/Gynode/HARVEST.git`, branch `main`.
 - **`main` is a live GitHub Pages site.** Pushing to it runs the deploy workflow. Never push without the
   user's explicit go-ahead.
-- **Deployment:** `.github/workflows/static.yml` builds the site and force-pushes `build/` to the **`gh-pages`**
-  branch; Pages serves that branch. It does **not** use `actions/deploy-pages`, because the repository's Pages
-  settings do not offer "GitHub Actions" as a source — the source is "Deploy from a branch", which must be
-  pointed at `gh-pages` / `(root)`. Until it is, Pages keeps serving `main` / `(root)`, i.e. the README
-  rendered by Jekyll. Only `build/` is published, so `blockchain/` and the project docs are never served.
+- **Deployment: the site is live and correct as of 2026-09-19.** `.github/workflows/static.yml` builds the site
+  and force-pushes `build/` to the **`gh-pages`** branch (currently `7e97f12`, built from `8968651`). It does
+  **not** use `actions/deploy-pages`, because the repository's Pages settings do not offer "GitHub Actions" as
+  a source — the source is "Deploy from a branch", and **the user has now repointed it to `gh-pages` / `(root)`**.
+  Verified against the live site: `https://gynode.github.io/HARVEST/` serves the Docusaurus build
+  (`/assets/css/styles.64bc7f80.css`, `/assets/js/main.46f4128f.js`), with `/docs/introduction/`,
+  `/docs/hrv-token/` and `/docs/status/` all returning 200 and rendering their headings.
+- **Only `build/` is published.** A consequence worth knowing, because it changed on 2026-09-19: while Pages
+  served `main` / `(root)`, Jekyll rendered the repository's markdown, so `AGENTS.md` and `CLAUDE.md` were
+  publicly readable at `/HARVEST/AGENTS.html` and `/HARVEST/CLAUDE.html`. They no longer are, and neither is
+  anything else outside `build/` — `blockchain/`, the project docs and the internal notes are all off the web.
 - **Ignored on purpose** (see `.gitignore`): `website/`, `manus-website-update_node_handler_rewards/`,
   `*.zip`, and the usual Python/Node artifacts. The two site trees are ignored because they are builds, not
   source, and `website/` is a separate repository.

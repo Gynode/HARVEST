@@ -190,9 +190,10 @@ The on-chain design is settled and Aiken is installed, so **nothing here blocks 
    with a whitepaper. Adding it as-is would create a gitlink with no `.gitmodules`; absorbing it would discard
    its history. It is ignored. Now that the repo-root site has been rewritten to the current direction, decide
    whether that whitepaper should be folded in, kept separate, or dropped.
-5. **`treasury_manager.py`'s demo still claims a funded treasury** — it prints a $47.5M treasury with USDC,
+5. **`treasury_manager.py`'s demo still claims a funded treasury** — it prints a $52.77M treasury with USDC,
    DAI, Compound and Yearn, contradicting the settled position that the treasury is unfunded, HRV has no
-   value, and the platform is Cardano. `AGENTS.md` §3.3 item 5.
+   value, and the platform is Cardano. Its valuation also double-counts yield-strategy allocations, so the
+   figure is wrong even on its own terms. `AGENTS.md` §3.3 item 5.
 6. **Still missing: `cardano-cli` and `pnpm`.** Not needed to write validators, but needed to deploy to a
    testnet and to run the interface.
 7. **The push to `main`.** Everything is committed; nothing is pushed. `origin/main` is at `77d98a2` and

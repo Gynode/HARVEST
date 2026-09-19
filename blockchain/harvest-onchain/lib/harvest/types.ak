@@ -44,11 +44,18 @@ pub type VoteChoice {
   Abstain
 }
 
-/// How a session's votes are weighted, and what it takes to pass.
+/// How a session's votes are weighted.
 ///
-/// Note the absence of `delegation_allowed`: delegation is settled as
-/// all-or-nothing at the governance-token level (see `onchain_design.md` §3), so
-/// it is not a per-session switch.
+/// Two deliberate omissions, both recorded in `AGENTS.md` §3.2:
+///
+///   - **`RankedChoice`** is in the Python's `VotingType`, but
+///     `_calculate_ranked_choice_result` just compares `yes_votes > no_votes` —
+///     simple majority under another name, ignoring `ranked_choices` entirely.
+///     Porting a stub would import a mechanism that does not exist, so it is
+///     left out until it is designed.
+///   - **`delegation_allowed`** is not a per-session switch either: delegation is
+///     settled as all-or-nothing at the governance-token level
+///     (`onchain_design.md` §3), not something a proposal turns on or off.
 pub type VotingType {
   SimpleMajority
   Supermajority
@@ -85,12 +92,17 @@ pub type VotingPower {
 ///
 /// This is the source of truth settled in `onchain_design.md` §3 (option 3b):
 /// power is fixed when the proposal is created, so transferring HRV afterwards
-/// cannot change a vote. Keyed by the holder's credential hash, and paired with
-/// `voting_supply` — the total these entries were built against, which is what
-/// quorum divides by (option D2) instead of the minted 1,000,000,000.
+/// cannot change a vote. Keyed by the holder's credential hash.
+///
+/// **It deliberately does not carry the quorum denominator.** `voting_supply` is
+/// a *governance-set* parameter (option D2), so it belongs in the governance
+/// config datum and must be read from there by whatever validates a vote. If it
+/// sat here it would be a field of the proposal — and the proposal is built by
+/// its proposer, who could then set the denominator to whatever made their own
+/// quorum easiest to reach. The denominator is passed to `voting.is_passed`
+/// separately for exactly this reason: it is not a property of the snapshot.
 pub type Snapshot {
   powers: Dict<ByteArray, VotingPower>,
-  voting_supply: Int,
 }
 
 /// The running tally of a session.
@@ -117,6 +129,15 @@ pub type ProposalDatum {
   snapshot: Snapshot,
   tally: Tally,
   /// Who has already voted, so no address votes twice.
+  ///
+  /// **This grows without bound, and that is a known limit of the design.** A
+  /// transaction is capped at roughly 16KB, so a datum holding every voter's
+  /// credential stops being spendable once the electorate is large enough —
+  /// which would freeze the proposal with its voting window still open. It is
+  /// acceptable while the electorate is the Node Handlers and a small holder
+  /// set, and it is a second reason the Merkle-root migration in
+  /// `onchain_design.md` §1 exists: the snapshot is one growing list, this is
+  /// another, and both have to move together.
   voters: List<ByteArray>,
   review_approvals: Int,
   review_rejections: Int,

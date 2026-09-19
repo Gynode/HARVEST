@@ -314,12 +314,21 @@ where the property tests in `dao_deployment_steps.md` §4 belong.
 
 ## Also found, and separate from all of the above
 
-`treasury_manager.py`'s `__main__` block prints a **$47.5M treasury** — 300,000,000 HRV at $0.10, 10M USDC,
-5M ADA at $0.50, 5M DAI — with Compound and Yearn yield strategies and `AssetType.LP_TOKEN`. Every part of
-that contradicts settled decisions: the treasury is **unfunded**, HRV has **no value**, DAI and Compound and
-Yearn are not on Cardano, and the asset list is EVM. The documents were corrected on 2026-09-18; this demo
-block was not, so running the contract as `AGENTS.md` §4 instructs still prints a funded treasury with a
-price. It is a demo, not a claim about the world — but it is the kind of demo that gets screenshotted.
+`treasury_manager.py`'s `__main__` block prints a **$52,767,857.14 treasury** — 300,000,000 HRV at $0.10,
+10M USDC, 5M ADA at $0.50, 5M DAI — with Compound and Yearn yield strategies and `AssetType.LP_TOKEN`. Every
+part of that contradicts settled decisions: the treasury is **unfunded**, HRV has **no value**, DAI and
+Compound and Yearn are not on Cardano, and the asset list is EVM. The documents were corrected on
+2026-09-18; this demo block was not, so running the contract as `AGENTS.md` §4 instructs still prints a funded
+treasury with a price. It is a demo, not a claim about the world — but it is the kind of demo that gets
+screenshotted.
+
+**Corrected 2026-09-19:** an earlier version of this note said $47.5M. That is what the four assets add up
+to; the program actually prints $52.77M, because `get_total_treasury_value_usd()` double-counts. It adds
+each yield strategy's value on top of the asset total, while `add_yield_strategy()` had already moved that
+allocation out of `asset.balance` — and the function never reduced `asset.value_usd` to match. Money that
+moved into a strategy is counted once as the balance it left and again as the strategy it entered. So the
+file contains a second defect beyond the stale figures, and any port should take the intent rather than this
+function.
 
 Fix it by reducing the demo to the true configuration (empty treasury, HRV at no price) and dropping the
 non-Cardano assets.

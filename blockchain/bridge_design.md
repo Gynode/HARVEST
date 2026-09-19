@@ -145,30 +145,33 @@ DAO proposal type, which is a reason for the DAO and the bridge to share a gover
 
 ---
 
-## 5. **[D] Settled by necessity — replay protection, and the one mistake to avoid**
+## 5. **[D] SETTLED — replay protection**
 
-This one is not a judgement call: binding the attestation to the exact UTxO is the only design that is safe,
-and the alternative is not a trade-off but a bug. It is written out at length because the failure is silent.
+**Corrected 2026-09-19.** An earlier version of this section said the attestation "must bind to a specific
+UTxO by output reference", implying a check to write. That is true of a design this bridge does not use, and
+stating it as a universal requirement was wrong. Here is the accurate version.
 
-Cardano's eUTxO model gives most of this for free: **a UTxO can be spent once.** A released lock UTxO cannot
-be released again, so the same lock cannot be drained twice. That is a genuine advantage over account-based
-chains, where replay is a standing hazard.
+Cardano's eUTxO model gives the first half for free, regardless of design: **a UTxO can be spent once.** A
+released lock cannot be drained twice, because the second transaction has no input to spend. That is a real
+advantage over account-based chains, where replay is a standing hazard.
 
-But it is not sufficient, and the gap is easy to fall into:
+The second half depends on *how* an attester authorises a release, and there are two mechanisms:
 
-- An attestation that says *"release 1,000 HRV to addr1…"* can be replayed against a **different** lock UTxO
-  that happens to hold 1,000 HRV. The attesters signed a statement about an amount, and the transaction
-  satisfies a different instance of it.
-- Therefore **the attestation must bind to a specific UTxO by output reference** (transaction id + index),
-  and the validator must check that the UTxO being spent is exactly the one named. Not the amount, not the
-  recipient — the UTxO.
-- The same applies to any message the attesters sign: bind to the exact thing being acted on, plus a domain
-  separator, so a signature for one purpose cannot be reused for another.
+| | How it binds | Risk |
+|---|---|---|
+| **Transaction signature** — the attester signs the actual transaction; the validator reads `tx.extra_signatories` | **Structurally.** A transaction signature covers the whole transaction body — every input, output, datum and validity interval. Binding is not something to construct, so it cannot be constructed wrong | None of this kind |
+| **Detached signed message** — the attester signs a payload; the validator verifies the signature over it | Only by whatever the payload happens to name. A payload saying *"release 1,000 HRV to addr1…"* can be replayed against a **different** lock UTxO holding 1,000 HRV, because the signature says nothing about which UTxO | Must name the exact UTxO, and carry a domain separator |
 
-**Recommendation: D1 — bind every attestation to the exact lock UTxO it releases, and check that binding
-explicitly in the validator, with a test that a replayed attestation against a different UTxO fails.** This
-is the single highest-value test in the whole bridge, because the failure is silent, total, and
-unrecoverable.
+**This bridge uses transaction signatures**, in `validators/lock.ak` via `tx.extra_signatories`. So the
+replay trap does not apply to it, and no binding check was needed — the earlier text would have sent someone
+looking for a check that should not exist.
+
+**The rule that does matter, for whoever extends this:** the moment a *detached* message is introduced — and
+there is an obvious reason to want one, since pre-authorising a release would let the Chain Follower relay
+burns without the signer being online — the payload must name the exact lock UTxO it releases and carry a
+domain separator. That is the mistake to avoid, and it is a mistake that only becomes available when the
+mechanism changes. A test that a replayed payload against a different UTxO fails belongs with the change
+that introduces detached messages, not before it.
 
 ---
 

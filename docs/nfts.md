@@ -6,7 +6,9 @@ sidebar_position: 4
 # The NFTs
 
 HARVEST includes a collection of **3,125 NFTs**, moved between Cardano and the sidechain the same way HRV is:
-locked on one side, represented on the other.
+locked on one side, represented on the other. The same trust applies — releasing a locked NFT requires a
+signature from HARVEST's key, and there is no refund path. See
+[Releasing locked HRV is custodial](/docs/hrv-token#releasing-locked-hrv-is-custodial).
 
 ## The collection
 

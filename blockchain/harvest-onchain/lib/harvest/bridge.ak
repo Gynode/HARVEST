@@ -40,6 +40,21 @@ pub type LockDatum {
 /// with a zero threshold would let anyone spend the lock, so a configuration
 /// mistake must fail closed. An empty attester set is rejected for the same
 /// reason. Every check here is written to fail closed.
+///
+/// **The count runs over `attesters`, not over `signatories`, and that
+/// direction is load-bearing.** Counting matching signatories means a list that
+/// names the same key twice counts twice, so a single signer could satisfy a
+/// threshold of two — confirmed by test before it was fixed. The ledger's own
+/// `extra_signatories` is a set, so today that cannot happen; a future design
+/// carrying the signer list in a redeemer would be caller-supplied, and this is
+/// the line that would have broken. Counting over `attesters` bounds each
+/// attester's contribution to one.
+///
+/// The residual assumption is the mirror image, and it is a deployment one:
+/// **`attesters` must not contain duplicates.** A duplicated entry there would
+/// count twice, letting one signature satisfy a higher threshold. That list is a
+/// script parameter, fixed and visible at deployment, which is why this is the
+/// better place for the assumption to sit.
 pub fn attester_threshold_met(
   signatories: List<VerificationKeyHash>,
   attesters: List<VerificationKeyHash>,
@@ -48,7 +63,7 @@ pub fn attester_threshold_met(
   if threshold <= 0 || list.is_empty(attesters) {
     False
   } else {
-    list.count(signatories, fn(kh) { list.has(attesters, kh) }) >= threshold
+    list.count(attesters, fn(kh) { list.has(signatories, kh) }) >= threshold
   }
 }
 
@@ -61,6 +76,20 @@ pub fn attester_threshold_met(
 ///
 /// The check is against the UTxO's real value, and an empty holding is rejected
 /// so a lock containing none of the policy cannot be released as a no-op.
+///
+/// Two boundaries worth stating rather than discovering:
+///
+///   - **One output must carry the whole amount.** A release that split the
+///     payout across two outputs to the owner would be rejected. That is
+///     stricter than necessary, not wrong — and since whoever builds the release
+///     transaction can simply not split it, the constraint costs a rebuild in an
+///     unusual case rather than losing anything.
+///   - **Only `policy_id` is protected.** Anything else sitting on the lock UTxO
+///     — an asset sent there by mistake, say — is not required to go to the
+///     owner, so the signer could direct it elsewhere. That is not a hole in the
+///     custody model, because the signer could equally refuse to release at all;
+///     it is a reason not to send anything to the lock address except the asset
+///     being locked.
 pub fn returns_to_owner(
   outputs: List<Output>,
   owner: VerificationKeyHash,
@@ -187,6 +216,14 @@ test a_committee_needs_the_threshold_not_just_one() {
     hrv,
     locked(1_000),
   )
+}
+
+test repeated_signatories_cannot_stand_in_for_distinct_attesters() {
+  // One signer listed twice must not satisfy a threshold of two. The ledger's
+  // own `extra_signatories` is a set so this cannot arise today, but the rule
+  // should not depend on that — a future design that carries the signer list in
+  // a redeemer would be caller-supplied, and this is where it would break.
+  attester_threshold_met([signer_1, signer_1], [signer_1, signer_2], 2) == False
 }
 
 test a_zero_threshold_fails_closed() {

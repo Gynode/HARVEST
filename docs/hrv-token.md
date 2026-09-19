@@ -28,6 +28,30 @@ HRV is not bridged by minting something new. Instead:
 That gives a hard limit: **sidechain supply can never exceed what is locked on mainnet.** If nothing is locked,
 nothing is represented.
 
+## Releasing locked HRV is custodial
+
+**Locked HRV is released when HARVEST signs for it.** That is the whole mechanism, and it is worth
+understanding before locking anything.
+
+A Cardano script can see only the transaction in front of it. It cannot read the sidechain, and it cannot check
+for itself that a representation was burned there. So step 3 above is not something the locking script can
+verify on its own — it is *told*, by a signature from a key HARVEST holds.
+
+Three consequences follow, and they are the reason this section exists:
+
+- **The bridge is not trustless.** You are trusting that key, not mathematics. Whoever holds it can release
+  every locked HRV.
+- **There is no refund path.** A lock can only be released by that signature. If the key is lost, the locked
+  HRV is unrecoverable — by anyone, including the project.
+- **If the sidechain stops, locked HRV does not come back on its own.**
+
+This is stated plainly here because the alternative is a reader assuming a guarantee that does not exist. The
+bridge is not decentralised, and it is not trustless. It is custodied by the project's key, and that is
+expected to remain true until a committee of signers replaces the single key.
+
+**None of this is live.** The bridge has not been deployed, and nothing can be locked today. See
+[Project status](/docs/status).
+
 ## What HRV is for
 
 - Transaction fees on the sidechain

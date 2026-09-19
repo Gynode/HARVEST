@@ -60,12 +60,16 @@ pub fn default_parameters(
         quadratic_scaling_percent: 50,
         max_vote_weight: None,
       }
+    // `treasury_management` is a valid `ProposalType` in `proposal_manager.py`,
+    // but `VotingMechanism.default_parameters` has no entry for it — so the
+    // Python's `.get(proposal_type, default_parameters["general"])` falls back to
+    // `General`. These are the General values, not the funding-request ones.
     types.TreasuryManagement ->
       types.VotingParameters {
         voting_type: types.SimpleMajority,
-        quorum_percent: 5,
+        quorum_percent: 3,
         approval_percent: 51,
-        voting_duration_ms: 5 * 24 * 3600 * 1000,
+        voting_duration_ms: 3 * 24 * 3600 * 1000,
         quadratic_scaling_percent: 100,
         max_vote_weight: None,
       }
@@ -97,14 +101,25 @@ pub fn effective_voting_power(
   } else {
     when parameters.voting_type is {
       types.Quadratic ->
-        when math.sqrt(raw) is {
-          Some(root) -> root * parameters.quadratic_scaling_percent / 100
-          None -> 0
+        // A non-positive scaling yields zero weight, never a negative one: a
+        // negative weight would *decrement* a tally, and a proposal that can be
+        // voted backwards is worse than one that cannot be voted at all.
+        if parameters.quadratic_scaling_percent <= 0 {
+          0
+        } else {
+          when math.sqrt(raw) is {
+            Some(root) -> root * parameters.quadratic_scaling_percent / 100
+            None -> 0
+          }
         }
       types.Weighted ->
         when parameters.max_vote_weight is {
           Some(cap) ->
-            if raw > cap {
+            // Same reasoning as the scaling above: a non-positive cap would
+            // otherwise become the returned weight.
+            if cap <= 0 {
+              0
+            } else if raw > cap {
               cap
             } else {
               raw
@@ -118,9 +133,13 @@ pub fn effective_voting_power(
 
 /// The weight a proposal needs to reach quorum, given a voting supply.
 ///
-/// Rounded **up**, so that truncation can never quietly lower the bar. A
-/// non-positive supply or percentage yields 0 — never a negative threshold,
-/// which would make quorum trivially satisfiable.
+/// Rounded **up**, so that truncation can never quietly lower the bar.
+///
+/// A non-positive supply or percentage yields 0, which is an *arithmetic*
+/// answer, not a policy one — `0` here would be trivially satisfied by any
+/// tally. **`quorum_met` is what refuses that case**, and it is the only
+/// function callers should use to decide whether quorum is reached. Calling
+/// this directly and comparing is a way to introduce a fail-open bug.
 pub fn quorum_required(voting_supply: Int, quorum_percent: Int) -> Int {
   if voting_supply <= 0 || quorum_percent <= 0 {
     0
@@ -139,7 +158,14 @@ pub fn quorum_met(
   voting_supply: Int,
   quorum_percent: Int,
 ) -> Bool {
-  total_cast >= quorum_required(voting_supply, quorum_percent)
+  // A degenerate configuration fails closed. Without this guard, a zero
+  // percentage or a zero supply makes `quorum_required` return 0 and every
+  // tally — including an empty one — would satisfy quorum.
+  if voting_supply <= 0 || quorum_percent <= 0 {
+    False
+  } else {
+    total_cast >= quorum_required(voting_supply, quorum_percent)
+  }
 }
 
 /// Whether the decisive votes approve, abstentions excluded.
@@ -147,9 +173,15 @@ pub fn quorum_met(
 /// `yes / (yes + no) >= approval_percent / 100`, rearranged to
 /// `yes * 100 >= approval_percent * (yes + no)` so the comparison is exact.
 /// No decisive votes means no approval, as in the Python.
+///
+/// A non-positive `approval_percent` also fails closed, and that guard is
+/// load-bearing rather than defensive: with a zero threshold the inequality
+/// becomes `yes * 100 >= 0`, which holds even when `yes` is zero — so a
+/// proposal with no support at all, and any number of votes against it, would
+/// be recorded as approved.
 pub fn approval_met(yes: Int, no: Int, approval_percent: Int) -> Bool {
   let decisive = yes + no
-  if decisive <= 0 {
+  if decisive <= 0 || approval_percent <= 0 {
     False
   } else {
     yes * 100 >= approval_percent * decisive
@@ -332,6 +364,47 @@ test the_python_demos_own_scenario_fails_quorum() {
     110_000_000,
     8,
   ) == False && approval_met(tally.yes, tally.no, 60) == True
+}
+
+// --- Degenerate configurations must fail closed, not fail open ---
+// These encode the intended behaviour; run them before assuming they pass.
+
+test zero_quorum_percent_does_not_waive_quorum() {
+  quorum_met(0, 1_000_000, 0) == False
+}
+
+test zero_voting_supply_does_not_waive_quorum() {
+  quorum_met(0, 0, 5) == False
+}
+
+test zero_approval_percent_cannot_approve_an_unanimous_no() {
+  // Zero yes votes must never be an approval, whatever the threshold.
+  approval_met(0, 1, 0) == False
+}
+
+test a_negative_scaling_cannot_produce_negative_weight() {
+  effective_voting_power(10_000, quadratic_params(-50)) >= 0
+}
+
+test a_negative_cap_cannot_produce_negative_weight() {
+  let capped = types.VotingParameters {
+    voting_type: types.Weighted,
+    quorum_percent: 5,
+    approval_percent: 51,
+    voting_duration_ms: 0,
+    quadratic_scaling_percent: 100,
+    max_vote_weight: Some(-1),
+  }
+  effective_voting_power(500, capped) >= 0
+}
+
+test treasury_management_falls_back_to_general_like_the_python() {
+  // The Python has no `treasury_management` entry and falls back to `general`.
+  // Porting it as the funding-request values would silently change what it takes
+  // to move treasury money.
+  let tm = default_parameters(types.TreasuryManagement)
+  let g = default_parameters(types.General)
+  tm.quorum_percent == g.quorum_percent && tm.approval_percent == g.approval_percent && tm.voting_duration_ms == g.voting_duration_ms && tm.quorum_percent == 3
 }
 
 test default_parameters_match_the_python() {

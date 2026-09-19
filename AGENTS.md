@@ -110,12 +110,24 @@ Created 2026-09-19 with `aiken new`, once `onchain_design.md` had settled what t
 |------|-----------|
 | `aiken.toml` | `gynode/harvest-onchain`, compiler `v1.1.23`, Plutus `v3`, depends on `aiken-lang/stdlib` `v3.1.0` |
 | `lib/harvest/types.ak` | Shared types: `ProposalType`, `ProposalStatus`, `VoteChoice`, `VotingType`, `VotingParameters`, `VotingPower`, `Snapshot`, `Tally`, `ProposalDatum`, `Funding` |
-| `lib/harvest/voting.ak` | The voting rules ported from `voting_mechanism.py`, with 17 tests |
-| `lib/harvest/bridge.ak` | The bridge lock's release rules, with 9 tests. Design in `blockchain/bridge_design.md` |
+| `lib/harvest/voting.ak` | The voting rules ported from `voting_mechanism.py`, with 23 tests — several of them degenerate-configuration cases, see below |
+| `lib/harvest/bridge.ak` | The bridge lock's release rules, with 10 tests. Design in `blockchain/bridge_design.md` |
 | `validators/lock.ak` | **The bridge lock script** — a thin shell around `bridge.ak`'s rules. Parameterised by attester set, threshold and policy id |
 | `validators/` | Otherwise empty: the governance, treasury and parameter validators are not written |
 
-`aiken check` runs **26 tests, all passing**. `aiken build` emits `plutus.json` containing `lock.lock.spend`.
+`aiken check` runs **33 tests, all passing**. `aiken build` emits `plutus.json` containing `lock.lock.spend`.
+
+**What the tests do not cover, stated so it is not mistaken for coverage:** every test exercises a pure
+function in `lib/`. **The validator body in `validators/lock.ak` is type-checked but never executed** — the
+`expect Some(lock_datum) = datum` guard and the `resolve_input` wiring are unverified, because testing them
+needs a full `ScriptContext`. Until there is a test that builds one, the confident part of this code is the
+rules and the unproven part is the three lines that feed them.
+
+**Every rule here was fixed by finding it broken first.** Nine defects were found on 2026-09-19 by writing
+tests that assert the safe behaviour and watching them fail: two fail-open quorum paths, an approval rule that
+passed a proposal with zero support, two ways to produce a *negative* voting weight, a threshold one signer
+could satisfy by appearing twice, and a proposal type whose parameters did not match the Python's fallback.
+The tests for them are the regression suite; they are not decorative.
 
 **Compiler trap, worth knowing before editing:** `aiken` v1.1.23 **crashes with no diagnostic** — exit 1, no
 message — on two things met here. Importing a name from a module that only re-exports it rather than defining
@@ -241,7 +253,27 @@ remove the duplicate vote paths from `proposal_manager.py` so one specification 
 `amount`, then `get_voting_power()` ignores it — it adds the delegator's *entire current balance* to the
 delegate. So delegation is all-or-nothing in effect, the `min_delegation_amount = 1000` check applies to a
 number that is never used, and delegated power changes retroactively when the delegator's balance moves.
-Whether delegation should be partial-amount or all-or-nothing is open — see §3.3.
+Settled as all-or-nothing, so `amount` and `min_delegation_amount` are not ported.
+
+**Three further defects found 2026-09-19 while porting, all in `proposal_manager.py`:**
+
+3. **The Node Handler review stage deadlocks.** `submit_node_handler_review` accepts a review only while the
+   proposal is `SUBMITTED`, and flips the status to `UNDER_REVIEW` once a majority of Node Handlers have
+   reviewed *counting rejections as reviews*. After that flip, further reviews are refused. `start_voting`
+   requires a majority of **approvals**. So with three Node Handlers: two rejections set the status to
+   `UNDER_REVIEW`, the third handler is locked out, `approve_count` stays at 0, and `start_voting` can never
+   succeed. The proposal is stuck permanently, and it looks like a voting problem rather than a lifecycle one.
+   The port must decide whether `UNDER_REVIEW` gates further reviews at all — the name suggests it marks the
+   stage, not that it closes it.
+4. **`treasury_management` has no voting parameters.** It is a valid `ProposalType`, but
+   `VotingMechanism.default_parameters` has no entry for it, so the Python's `.get(..., "general")` fallback
+   supplies the General values — 3% quorum, 3 days. `voting.ak` reproduces the fallback explicitly, with a
+   test; porting it as the funding-request values, which is what a reader would guess, silently changes what
+   it takes to move treasury money.
+5. **`RankedChoice` is a stub, not a mechanism.** `VotingType` lists it and `_calculate_ranked_choice_result`
+   compares `yes_votes > no_votes` — which is simple majority with a different name, and ignores
+   `ranked_choices` entirely. The Aiken `VotingType` omits `RankedChoice` for this reason; if it is ever
+   wanted it needs designing, not porting.
 
 **Consequence for the roadmap:** quorum and approval thresholds must be expressed against a governance-set
 `voting_supply` parameter, **never against the minted 1,000,000,000**. That removes the lost-wallet supply
@@ -271,13 +303,21 @@ Do not resolve any of these by assumption.
    `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was done —
    it is ignored. Now that the repo-root site has been rewritten, decide whether `website/`'s whitepaper
    content should be folded into it, kept separate, or dropped.
-5. **`treasury_manager.py`'s demo still claims a funded treasury.** Its `__main__` block prints a **$47.5M
-   treasury** — 300,000,000 HRV at $0.10, 10M USDC, 5M ADA at $0.50, 5M DAI — with Compound and Yearn yield
-   strategies and an `AssetType.LP_TOKEN`. Every part of that contradicts settled decisions: the treasury is
-   unfunded, HRV has no value, and DAI/Compound/Yearn are not on Cardano. The documents were corrected on
-   2026-09-18; this demo block was missed, so running the contract as §4 instructs still prints a funded
-   treasury with a price. `onchain_design.md` gives the fix: reduce the demo to the true configuration and
-   drop the non-Cardano assets.
+5. **`treasury_manager.py`'s demo still claims a funded treasury, and its valuation double-counts.** Run it as
+   §4 instructs and it prints a **$52,767,857.14 treasury** — 300,000,000 HRV at $0.10, 10M USDC, 5M ADA at
+   $0.50, 5M DAI — with Compound and Yearn yield strategies and an `AssetType.LP_TOKEN`. Every part of that
+   contradicts settled decisions: the treasury is unfunded, HRV has no value, and DAI/Compound/Yearn are not
+   on Cardano. The documents were corrected on 2026-09-18; this demo block was missed.
+
+   **The figure is also wrong on its own terms.** The four assets add to $47.5M, but the report says $52.77M,
+   because `get_total_treasury_value_usd()` adds each yield strategy's value to the asset total —
+   while `add_yield_strategy()` had already moved that allocation *out* of `asset.balance` and
+   `get_total_treasury_value_usd()` never reduced `asset.value_usd` to match. So the same money is counted
+   twice, once as the balance it left and once as the strategy it entered. Anyone porting this file should
+   port the intent, not this function.
+
+   `onchain_design.md` gives the fix: reduce the demo to the true configuration and drop the non-Cardano
+   assets.
 
 ---
 
@@ -365,4 +405,5 @@ Aiken can be written** — that was the gate. The starting points are:
    P2P, storage, and the Chain Follower.
 4. **Somewhere along the way, two smaller jobs:** find the remaining HRV supply (§3.3, item 1 — no longer
    blocking, but the `voting_supply` parameter wants a real number), and fix `treasury_manager.py`'s demo,
-   which still prints a funded $47.5M treasury with EVM assets and an HRV price (§3.3, item 5).
+   which still prints a funded $52.77M treasury with EVM assets, an HRV price, and a valuation that
+   double-counts its own yield strategies (§3.3, item 5).

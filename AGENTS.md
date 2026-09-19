@@ -111,7 +111,18 @@ Created 2026-09-19 with `aiken new`, once `onchain_design.md` had settled what t
 | `aiken.toml` | `gynode/harvest-onchain`, compiler `v1.1.23`, Plutus `v3`, depends on `aiken-lang/stdlib` `v3.1.0` |
 | `lib/harvest/types.ak` | Shared types: `ProposalType`, `ProposalStatus`, `VoteChoice`, `VotingType`, `VotingParameters`, `VotingPower`, `Snapshot`, `Tally`, `ProposalDatum`, `Funding` |
 | `lib/harvest/voting.ak` | The voting rules ported from `voting_mechanism.py`, with 17 tests |
-| `validators/` | **Empty.** The scaffold's `placeholder.ak` was deleted — it was a `todo` stub, and the point now is real code |
+| `lib/harvest/bridge.ak` | The bridge lock's release rules, with 9 tests. Design in `blockchain/bridge_design.md` |
+| `validators/lock.ak` | **The bridge lock script** — a thin shell around `bridge.ak`'s rules. Parameterised by attester set, threshold and policy id |
+| `validators/` | Otherwise empty: the governance, treasury and parameter validators are not written |
+
+`aiken check` runs **26 tests, all passing**. `aiken build` emits `plutus.json` containing `lock.lock.spend`.
+
+**Compiler trap, worth knowing before editing:** `aiken` v1.1.23 **crashes with no diagnostic** — exit 1, no
+message — on two things met here. Importing a name from a module that only re-exports it rather than defining
+it (`VerificationKeyHash` is defined in `aiken/crypto`, not `cardano/transaction`), and calling
+`dict.from_pairs` or `dict.from_ascending_pairs`. Both cost real time to find, because nothing is printed. If
+`aiken check` exits 1 silently, suspect the most recently added import or dict constructor, not a logic error.
+The fixtures use `dict.singleton` to avoid the second.
 
 **Deviation from the scaffold worth knowing:** `aiken new` also wrote
 `.github/workflows/continuous-integration.yml` inside the project. GitHub only runs workflows from the

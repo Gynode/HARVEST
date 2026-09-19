@@ -10,5 +10,119 @@
     },
     "license": "Apache-2.0"
   },
-  "validators": []
+  "validators": [
+    {
+      "title": "lock.lock.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/harvest~1bridge~1LockDatum"
+        }
+      },
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "parameters": [
+        {
+          "title": "attesters",
+          "schema": {
+            "$ref": "#/definitions/List<aiken~1crypto~1VerificationKeyHash>"
+          }
+        },
+        {
+          "title": "threshold",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "policy_id",
+          "schema": {
+            "$ref": "#/definitions/cardano~1assets~1PolicyId"
+          }
+        }
+      ],
+      "compiledCode": "5902d301010022229800aba2aba1aba0aab9faab9eaab9dab9a9bac0049bad0039bae002488888888896600264653001300b00198059806000cc02c0092225980099b8748008c028dd500144c8cc896600266e1d2000300d375400319800918091809800c88c8c8cc0040040108966002003003899192cc004cdc8803000c56600266e3c01800626eacc05400a00a809a26600800860320068098dd71809800980b000a02814bd6f7b63048896600200314a313322332232330010010072259800800c4cc00d300103d87a800000189919912cc004cdc780380144cc018cdd2a400066038603400697ae0001899802802800a030375c602e0026038004603400280c0dd71809001112cc0056600266e1d20023014375400514a11337126eb4c054010dd6980c180a9baa002404d19800803c006006803a2941013180a000980a800a0249bac301130123012301230123012301230123012300e37540093758602260246024601c6ea80126eb8c044c038dd5180898071baa0014888888cc8966002b30015980099b890124800229462b30010138a518a50405c80a22942266e24048c8cc004004018896600200314800226644b300132330010010182259800800c528456600266e3cdd7180f8008024528c4cc008008c08000501a203a899b8048008006200280c0dd7180d80099801001180e000a0324051159800acc00400629462941017452844c8cc004004014896600200314a1159800992cc004cdd7980e180c9baa301c3019375400266e9520003301b375200c97ae0899802998051bab300b3019375400202800914a080b8c06c0062946266004004603800280b101920288a50405060080086600a6eacc018c050dd519198008009bac30183015375401644b30010018b44c96600266ebcc068c05cdd5000805c4c024c05cdd5000c4cc00c00cc06c009015180c800a02e00f45900c18078009807980800098059baa0028b2012180580098031baa00b8a4d1365640101",
+      "hash": "a9e8ce43b253b1b4e3c10caa77a7a39a365e37a6ba878fa47feb84c7"
+    },
+    {
+      "title": "lock.lock.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "parameters": [
+        {
+          "title": "attesters",
+          "schema": {
+            "$ref": "#/definitions/List<aiken~1crypto~1VerificationKeyHash>"
+          }
+        },
+        {
+          "title": "threshold",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "policy_id",
+          "schema": {
+            "$ref": "#/definitions/cardano~1assets~1PolicyId"
+          }
+        }
+      ],
+      "compiledCode": "5902d301010022229800aba2aba1aba0aab9faab9eaab9dab9a9bac0049bad0039bae002488888888896600264653001300b00198059806000cc02c0092225980099b8748008c028dd500144c8cc896600266e1d2000300d375400319800918091809800c88c8c8cc0040040108966002003003899192cc004cdc8803000c56600266e3c01800626eacc05400a00a809a26600800860320068098dd71809800980b000a02814bd6f7b63048896600200314a313322332232330010010072259800800c4cc00d300103d87a800000189919912cc004cdc780380144cc018cdd2a400066038603400697ae0001899802802800a030375c602e0026038004603400280c0dd71809001112cc0056600266e1d20023014375400514a11337126eb4c054010dd6980c180a9baa002404d19800803c006006803a2941013180a000980a800a0249bac301130123012301230123012301230123012300e37540093758602260246024601c6ea80126eb8c044c038dd5180898071baa0014888888cc8966002b30015980099b890124800229462b30010138a518a50405c80a22942266e24048c8cc004004018896600200314800226644b300132330010010182259800800c528456600266e3cdd7180f8008024528c4cc008008c08000501a203a899b8048008006200280c0dd7180d80099801001180e000a0324051159800acc00400629462941017452844c8cc004004014896600200314a1159800992cc004cdd7980e180c9baa301c3019375400266e9520003301b375200c97ae0899802998051bab300b3019375400202800914a080b8c06c0062946266004004603800280b101920288a50405060080086600a6eacc018c050dd519198008009bac30183015375401644b30010018b44c96600266ebcc068c05cdd5000805c4c024c05cdd5000c4cc00c00cc06c009015180c800a02e00f45900c18078009807980800098059baa0028b2012180580098031baa00b8a4d1365640101",
+      "hash": "a9e8ce43b253b1b4e3c10caa77a7a39a365e37a6ba878fa47feb84c7"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "List<aiken/crypto/VerificationKeyHash>": {
+      "dataType": "list",
+      "items": {
+        "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+      }
+    },
+    "aiken/crypto/VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    },
+    "cardano/assets/PolicyId": {
+      "title": "PolicyId",
+      "dataType": "bytes"
+    },
+    "harvest/bridge/LockDatum": {
+      "title": "LockDatum",
+      "description": "What a lock records. Deliberately minimal.\n\n **There is no `amount` field.** The amount is read from the UTxO's actual\n value when the lock is released, not from the datum — so a lock cannot\n claim to hold more than it does. A datum field would be a second source of\n truth for the same fact, and the wrong one to trust.\n\n `owner` is a key hash rather than a full address, so the validator cannot be\n talked into paying a script and the check is a single equality.",
+      "anyOf": [
+        {
+          "title": "LockDatum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "owner",
+              "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+            },
+            {
+              "title": "sidechain_recipient",
+              "description": "Where to credit the representation on the sidechain. Opaque here — the\n sidechain decides its own address format, and the Chain Follower reads it.",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

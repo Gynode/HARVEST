@@ -123,19 +123,22 @@ sidechain represents the locked amount (settled 2026-09-18 — see `corrected_hr
 
 That means the DAO's on-chain code depends on the bridge's locking validator, which **does not exist yet**.
 
-**But the claim that the bridge must be designed first does not survive contact with the two designs.**
-`onchain_design.md` settles the *DAO's* design thoroughly; it says nothing about the bridge's, and nothing
-anywhere in the repository does. Who may release a locked CNT, what authorises a release, whether the
-sidechain's Node Handlers sign for it, what the representation token is, and how a lock on mainnet becomes
-visible to the sidechain are all unanswered. So "settle the bridge design first" means *designing it*, not
-following a settled design — and the DAO validators, whose design is settled and whose specification exists,
-are the piece that can actually be built today.
+**Updated 2026-09-19 — the bridge now has a design, and its first validator is written.** See
+`blockchain/bridge_design.md` for the reasoning and `validators/lock.ak` for the script, whose rules and
+9 tests live in `lib/harvest/bridge.ak`.
 
-The dependency also runs less deep than this section implies. The HRV CNT already exists on Cardano mainnet,
-which is where the DAO now lives (§2), so the governance and treasury validators can be written against the
-real CNT policy id without the bridge existing. The bridge matters to whether **locked** HRV can vote —
-which is a question worth settling before the snapshot logic is wired to anything, since locked HRV is, by
-construction, not in any holder's UTxOs.
+The design, in one paragraph: a Cardano validator cannot see the sidechain, so it cannot establish that a
+burn happened. Something has to tell it, and the only thing a script can verify is a signature. So this is a
+**custodial** bridge — the user holds the signing key, settled 2026-09-19 — and it is written as M-of-N
+anyway so that raising the threshold to a committee later is a deployment parameter rather than a rewrite.
+The validator limits the signer's power in one specific way: the attesters choose *when* a release happens,
+never *to whom* — the transaction must pay the lock's recorded owner everything the lock held.
+
+**The "bridge first" ordering no longer holds, and it never really did.** The HRV CNT already exists on
+Cardano mainnet, which is where the DAO now lives (§2), so the governance and treasury validators can be
+written against the real CNT policy id without the bridge existing. And the one place the two designs touch —
+whether locked HRV votes — is now settled as **no** (`bridge_design.md` §7), which means the snapshot builder
+does not read the lock script at all. The DAO validators and the bridge are independent.
 
 Also unresolved: **the amount of HRV actually remaining** after two wallets were lost. This no longer blocks
 the validators — see §2 — provided quorum and approval thresholds are expressed against a governance-set

@@ -34,7 +34,7 @@ documents that still need resolving. Contributors using Claude Code should also 
 ```
 blockchain/
   blockchain_code/          Python prototypes (consensus, contracts, tools)
-  harvest_dao_package/      DAO contracts, React interface, deployment steps, QSTP treasury docs
+  harvest_dao_package/      DAO contracts, React interface, deployment steps, treasury docs
   development_plan/         Architecture, roadmap, Cardano sidechain research
   documentation/            Technical documentation, Node Handler guide, user guide
 docs/ src/ static/ blog/    Repo-root Docusaurus site (superseded narrative — see AGENTS.md §1)

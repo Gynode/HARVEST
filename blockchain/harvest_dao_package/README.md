@@ -14,7 +14,7 @@ Governance, proposals, voting and treasury for HARVEST, the Proof-of-Authority s
 | `harvest-dao-interface/` | React 19 + Vite + Tailwind + shadcn/ui. A UI **mockup** — hardcoded data, no network calls |
 | `dao_deployment_steps.md` | The intended Cardano/Aiken deployment path (nothing to deploy yet) |
 | `corrected_hrv_valuation.md` | The HRV valuation model |
-| `qstp_treasury_roadmap.md`, `updated_qstp_treasury_summary.md` | Funding strategy and current treasury configuration |
+| `treasury_funding_roadmap.md`, `treasury_summary.md` | Funding strategy and current treasury configuration |
 | `CHANGELOG.md` | What changed, and which numbers are void |
 
 ## The DAO
@@ -23,7 +23,7 @@ Governance, proposals, voting and treasury for HARVEST, the Proof-of-Authority s
   supply.
 - **Proposal manager** — lifecycle from draft through Node Handler review to execution or cancellation.
 - **Voting** — quadratic, with quorum and thresholds.
-- **Treasury** — multi-signature control, yield strategies, QSTP funding preparation.
+- **Treasury** — multi-signature control, yield strategies, funding preparation.
 
 All four exist as Python with typed interfaces, dataclasses and working demos. They run against a mock
 `blockchain_state` object.

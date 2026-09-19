@@ -23,7 +23,7 @@ new file.
 | **HRV coin** | **Minted on Cardano mainnet as a Cardano Native Token (CNT): 1,000,000,000.** This is the *only* HRV — the sidechain represents the locked CNT and does not mint its own. Two wallets have since been lost — remaining supply unconfirmed. |
 | **NFTs** | 3,125 designed NFTs, minted on the sidechain, bridged from Cardano. |
 | **Node Handlers (Masters)** | Authorised validators. Round-robin block production, minimal hardware (dual-core, 8 GB RAM, 250 GB SSD, 10 Mbps). |
-| **HARVEST DAO** | Governance over treasury, proposals, quadratic voting. The treasury is **unfunded** — it still has to be funded with actual fiat, so HRV has no value yet. QSTP (Qatar Science and Technology Park) entry targeted Q1 2026. |
+| **HARVEST DAO** | Governance over treasury, proposals, quadratic voting. The treasury is **unfunded** — it still has to be funded with actual fiat, so HRV has no value yet. Funding is **being sourced**, no source is named, and **2027** is the target. QSTP and Project Catalyst were both removed as sources on 2026-09-19. |
 | **Platform** | **Cardano / Plutus**, eUTxO, via the Cardano Sidechain Toolkit. On-chain code in **Aiken**. |
 
 **Current direction (decided 2026-09-18):** the sidechain + DAO work in `blockchain/` is the real HARVEST,
@@ -62,7 +62,7 @@ Phases 1–6 as complete. **None of that reflects working software.** What actua
 |------|-----------|
 | `blockchain/harvest-onchain/` | **The Aiken project — the only on-chain code that will ever run on Cardano.** Created 2026-09-19. `lib/harvest/` holds `types.ak` and `voting.ak`; `validators/` is still empty. `build/` is gitignored. |
 | `blockchain/blockchain_code/` | Python prototypes: `core_components/`, `smart_contracts/`, `tools/` |
-| `blockchain/harvest_dao_package/` | The DAO package — contracts, React interface, deployment steps, QSTP treasury docs |
+| `blockchain/harvest_dao_package/` | The DAO package — contracts, React interface, deployment steps, treasury docs |
 | `blockchain/development_plan/` | Architecture, roadmap, Cardano sidechain research, `todo.md` |
 | `blockchain/documentation/` | Technical documentation, Node Handler guide, user guide |
 | `docs/`, `src/`, `static/`, `blog/` | The repo-root Docusaurus site — **superseded narrative** (see above) |
@@ -179,11 +179,13 @@ The on-chain design is settled and Aiken is installed, so **nothing here blocks 
    read off another computer. Related and undecided: the repo-root site states "lost wallets are treated as
    burned, reducing supply", but nothing says how a lost wallet is reflected on-chain. It no longer blocks the
    validators, only the initial value of the `voting_supply` parameter.
-2. **The QSTP request** — funding is to be fiat, but the roadmap previously specified ADA amounts. The
-   amount and asset of the actual request must be restated before it is used for an application.
+2. **The funding source** — funding is to be fiat, and is **being sourced** with no source named and 2027 as
+   the target. QSTP and Project Catalyst were both removed as sources on 2026-09-19, so
+   `treasury_funding_roadmap.md` now names none. The amount and asset of the request still have to be
+   restated before anything is applied for.
 3. **Three documents describe the treasury as holding fiat.** The decision is that it holds on-chain assets
-   with fiat converted on entry (above), but `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
-   `updated_qstp_treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
+   with fiat converted on entry (above), but `corrected_hrv_valuation.md`, `treasury_funding_roadmap.md` and
+   `treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
    without saying it becomes a converted asset first — which the chain cannot deliver. The wording pass is
    owed. See `onchain_design.md` §C.
 4. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site

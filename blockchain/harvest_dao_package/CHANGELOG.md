@@ -3,6 +3,26 @@
 This package's documents have changed models twice, both times because the earlier model was wrong. This file
 exists so the superseded numbers are not reintroduced.
 
+## 2026-09-19 — Funding sources removed, and two documents renamed
+
+Decided by the project owner:
+
+- **QSTP is no longer a source of funding.** The Qatar Science and Technology Park route, and the case argued
+  for it, are removed. The target date it carried (Q1 2026) had already passed.
+- **Project Catalyst is no longer a source of funding either.** Earlier drafts ran Catalyst (development
+  costs) and QSTP (treasury backing) together as two routes; neither stands now.
+- **Funding is being sourced, with 2027 as the target.** No source is named, and the asset remains fiat.
+
+Two files were renamed as a result, since their names carried QSTP:
+
+| Was | Now |
+|---|---|
+| `qstp_treasury_roadmap.md` | `treasury_funding_roadmap.md` — rewritten; the QSTP framing and its preparation checklist are gone |
+| `updated_qstp_treasury_summary.md` | `treasury_summary.md` |
+
+The 2026-09-18 entries below refer to these files by their old names, because that is what they were called
+when those changes were made.
+
 ## 2026-09-18 — Platform and token model settled
 
 Decisions taken by the project owner:

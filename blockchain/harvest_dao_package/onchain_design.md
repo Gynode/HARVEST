@@ -148,8 +148,8 @@ Neither argues against C1 — they argue for stating it plainly, which is why th
 left as an assumption. The failure mode this avoids is the expensive one: a validator believed to hold
 $100,000 that holds nothing.
 
-**A documentation obligation follows:** `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
-`updated_qstp_treasury_summary.md` say value comes from funding "the treasury" with "actual fiat" without
+**A documentation obligation follows:** `corrected_hrv_valuation.md`, `treasury_funding_roadmap.md` and
+`treasury_summary.md` say value comes from funding "the treasury" with "actual fiat" without
 saying that the on-chain treasury holds a converted asset. Until they say so, "30% of the treasury is backed"
 has no defined referent — and a reader is entitled to assume the treasury holds fiat, which it cannot.
 

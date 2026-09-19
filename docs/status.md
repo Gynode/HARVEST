@@ -17,7 +17,7 @@ This page exists so that nothing else on this site is mistaken for something you
 | PoA consensus | Prototype — round-robin leader selection works; block signing and validation are placeholders |
 | HRV and NFT contracts | Prototype — in-memory demonstration classes |
 | DAO contracts | Specification-grade Python for governance, proposals, quadratic voting and treasury. Not deployable, and not on Cardano |
-| On-chain validators | **Early.** A bridge locking script is written in Aiken with 9 tests, and the DAO's voting rules with 17. Nothing is deployed, and no governance or treasury validator exists |
+| On-chain validators | **Early.** A bridge locking script is written in Aiken with 10 tests, and the DAO's voting rules with 23. Nothing is deployed, and no governance or treasury validator exists |
 | DAO web interface | UI mockup — renders fixed sample data and talks to no backend |
 
 ## What does not exist
@@ -38,8 +38,8 @@ different, EVM-based deployment. Both have been superseded, and the references t
 
 ## Funding
 
-A **Cardano Catalyst** grant application is in progress. No funding has been secured, and the DAO treasury is
-unfunded.
+**Funding is being sourced.** No funding has been secured, no source is named, and the DAO treasury is
+unfunded. The target is 2027.
 
 ## Following along
 

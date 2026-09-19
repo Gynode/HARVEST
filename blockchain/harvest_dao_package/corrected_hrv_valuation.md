@@ -55,4 +55,6 @@ unfunded. Proposal thresholds are set in HRV amounts — see `harvest_dao/docs/t
 
 1. The remaining supply, after the two lost wallets.
 2. How a lost wallet is treated on-chain (burned? unspendable? both, depending on custody?).
-3. The size and asset of the first treasury funding — see `qstp_treasury_roadmap.md`.
+3. The size, asset and **source** of the first treasury funding — see `treasury_funding_roadmap.md`. As of
+   2026-09-19 no source is named: QSTP and Project Catalyst were both removed, and funding is being sourced
+   with 2027 as the target.

@@ -22,8 +22,13 @@ HARVEST is a permissioned **Proof-of-Authority (PoA) sidechain for the Cardano e
   authorised by identity and reputation rather than stake or computation. Minimum spec: dual-core CPU,
   8 GB RAM, 250 GB SSD, 10 Mbps up/down, Ubuntu 20.04+.
 - **HARVEST DAO** — proposal lifecycle with Node Handler review, quadratic voting, and a multi-signature
-  treasury. Growth strategy centres on QSTP (Qatar Science and Technology Park) entry in Q1 2026 bringing
-  $100K of ADA backing, via the Compu-AId & ALSYS business.
+  treasury. The treasury is **unfunded** and funding is **being sourced**: no source is named, the asset is
+  **fiat**, and the target is **2027**. See §3.1 item 5.
+
+  **QSTP and Project Catalyst were both removed as funding sources on 2026-09-19**, by the user. Before that,
+  this line and the roadmap named QSTP (Qatar Science and Technology Park) entry in Q1 2026 through the
+  Compu-AId & ALSYS business — a date that had already passed by the time it was removed, and an earlier
+  version of the line claimed "$100K of ADA backing", which was wrong on both the amount and the asset.
 
 ### Direction, as decided on 2026-09-18
 
@@ -69,7 +74,7 @@ a **simulation**, not a deployable contract — everything runs in-process again
 | `governance_token.py` | `GovernanceToken`: balances, delegation (`delegate`/`revoke_delegation`), `get_voting_power()` computed as own balance + delegated-in − delegated-away, `create_voting_snapshot(block_number)`, `can_create_proposal()` against `min_proposal_threshold` (0.1% of supply), `get_top_voters()`. |
 | `proposal_manager.py` | `ProposalType` and `ProposalStatus` enums, full lifecycle from `DRAFT` through `EXECUTED`/`CANCELLED`, Node Handler review stage. |
 | `voting_mechanism.py` | Quadratic voting, quorum and threshold handling. |
-| `treasury_manager.py` | `AssetType` enum, multi-signature approvals, yield strategy, QSTP funding preparation. |
+| `treasury_manager.py` | `AssetType` enum, multi-signature approvals, yield strategy, funding preparation. |
 
 Each contract has an `if __name__ == "__main__"` block that exercises it and prints results — that is how they
 are meant to be run.
@@ -195,8 +200,8 @@ These override every older document.
 | File | What changed |
 |------|--------------|
 | `harvest_dao_package/corrected_hrv_valuation.md` | Replaced with the settled model; the void arithmetic listed explicitly |
-| `harvest_dao_package/updated_qstp_treasury_summary.md` | Reduced to the true configuration: unfunded, $0 |
-| `harvest_dao_package/qstp_treasury_roadmap.md` | Strategy kept, all value projections removed, asset marked unconfirmed |
+| `harvest_dao_package/treasury_summary.md` | Reduced to the true configuration: unfunded, $0. (Renamed from `updated_qstp_treasury_summary.md` on 2026-09-19) |
+| `harvest_dao_package/treasury_funding_roadmap.md` | Strategy kept, all value projections removed, asset marked unconfirmed. **Rewritten and renamed from `qstp_treasury_roadmap.md` on 2026-09-19** — see §3.1 item 5 |
 | `harvest_dao_package/dao_deployment_steps.md` | **Rewritten from scratch** — was EVM/web3, now Cardano/Aiken |
 | `harvest_dao_package/README.md` | Corrected supply, value, toolchain |
 | `harvest_dao_package/CHANGELOG.md` | Records which numbers are void |
@@ -289,13 +294,14 @@ Do not resolve any of these by assumption.
    burned, reducing supply", but nothing in the sidechain docs says how a lost wallet is reflected on-chain.
    **This no longer blocks the validators** — see §3.2 and `onchain_design.md` §D — only the initial value
    of the `voting_supply` parameter, which governance can correct later.
-2. **The QSTP request.** Funding is to be fiat, but `qstp_treasury_roadmap.md` previously specified ADA
-   amounts (100,000 ADA / "$100,000 worth of ADA"). The amount and asset of the actual request must be
-   restated before the document is used for an application. Note also that earlier drafts ran together two
-   different funding routes — Project Catalyst (development costs) and QSTP (treasury backing).
+2. **The funding source, and the amount.** Funding is to be **fiat**, and is **being sourced** — no source is
+   named, and the target is **2027**. QSTP and Project Catalyst were both removed as sources on 2026-09-19,
+   which is what `treasury_funding_roadmap.md` (renamed from `qstp_treasury_roadmap.md`) now records. The
+   amount and asset of the request still have to be restated before anything is applied for: earlier drafts
+   specified 100,000 ADA / "$100,000 worth of ADA", both void.
 3. **Three documents describe the treasury as holding fiat.** The decision is that it holds on-chain assets
-   with fiat converted on entry (§3.2), but `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
-   `updated_qstp_treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
+   with fiat converted on entry (§3.2), but `corrected_hrv_valuation.md`, `treasury_funding_roadmap.md` and
+   `treasury_summary.md` still say value comes from funding "the treasury" with "actual fiat"
    without saying it becomes a converted asset first. A reader is entitled to assume otherwise, which the
    chain cannot deliver. The wording pass is owed. See `onchain_design.md` §C.
 4. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*

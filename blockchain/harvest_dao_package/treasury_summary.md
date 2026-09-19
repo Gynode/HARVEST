@@ -10,6 +10,8 @@
 | Treasury value | **$0** |
 | HRV value | **$0 — no backing exists** |
 | Funding required | **actual fiat** |
+| Source | **being sourced — none named** |
+| Target | **2027** |
 
 The treasury is unfunded. Nothing has been contributed, and no funding has been secured.
 
@@ -26,6 +28,8 @@ worth of ADA", growing to $1,300,000+. Three things were wrong with that:
 
 ## Still to confirm
 
-- Whether the QSTP route in `qstp_treasury_roadmap.md` remains the funding strategy, and in what asset.
+- **The source of funding.** QSTP and Project Catalyst were both removed as sources on 2026-09-19; funding is
+  being sourced, with **2027** as the target. No source is named. See `treasury_funding_roadmap.md`.
+- The amount and asset of the request — fiat, and no figure has been set.
 - The remaining HRV supply after the two lost wallets.
 - Any yield strategy. There is nothing to stake or lend until the treasury is funded.

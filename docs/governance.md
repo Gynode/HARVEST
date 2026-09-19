@@ -27,7 +27,8 @@ treasury holding anything. Delegation is supported: holders may delegate their v
 Treasury spending requires multiple approvals, and critical changes are subject to a timelock.
 
 **The treasury is not funded.** No contributions have been made and no funding has been secured, so there is
-nothing to allocate today. It is intended to be funded in fiat.
+nothing to allocate today. It is intended to be funded in fiat, and funding is being sourced — no source is
+named. The target is 2027.
 
 ## Status
 

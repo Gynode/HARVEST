@@ -24,15 +24,31 @@ aiken --version
 
 ## 2. Design before code
 
-Not yet done, and blocking:
+**Settled 2026-09-19.** See `onchain_design.md` for the reasoning, and for the items still open (how the
+treasury relates to fiat; the quorum denominator; partial versus all-or-nothing delegation).
 
-- [ ] **Decide what is on-chain.** Governance voting and treasury custody do not have to live in the same
-      validator. Settle the split before writing any of it.
-- [ ] **Decide the treasury custody model.** Cardano multi-signature can be a native script or a Plutus
-      validator; the choice drives how treasury spends are authorised.
-- [ ] **Decide voting power's source of truth.** Voting power is computed from HRV holdings and delegations.
-      On-chain, that means either a snapshot datum or a validator that reads the holder's UTxO — this is the
-      central design question of the whole DAO.
+- [x] **What is on-chain.** On-chain: proposal lifecycle, voting-power snapshot commitment, vote tally,
+      treasury spend authorisation, and governance parameters. Off-chain: proposal title and description,
+      snapshot construction, the voter interface, and reporting.
+- [x] **The treasury custody model — Plutus validator plus committee signatures.** The Aiken validator
+      enforces the proposal check (the referenced proposal UTxO is spent in the same transaction, its datum
+      says `Passed`, and the recipient and amount match) *and* requires M-of-N treasury-committee signatures
+      via `tx.extra_signatories`. Timelocks come from `tx.validity_range` against a deadline in the proposal
+      datum. A native script alone was rejected: it cannot read a datum or inspect a transaction, so it can
+      express "3 of 5 keys signed" but never "…and this matches proposal 7".
+- [x] **Voting power's source of truth — a snapshot committed in the proposal datum.** Power is frozen at
+      proposal creation and the validator reads it directly, so no proof is needed and there is nothing to
+      trust at this electorate size. A validator cannot read an address's balance, so the alternatives were
+      a Merkle-root snapshot (the migration path once the map outgrows the transaction size limit) or
+      reading the voter's UTxOs live (rejected: undercounts unless the voter spends every HRV UTxO, and
+      power can be borrowed within one atomic transaction).
+- [x] **Which ledger hosts the DAO — Cardano.** Not the sidechain: HRV on the sidechain is a representation
+      of locked CNT, so sidechain governance would make the Node Handler set the final authority over the
+      treasury. The sidechain consumes governance decisions through the Chain Follower.
+
+**One consequence worth noting:** because quorum should be denominated against a governance-set
+`voting_supply` parameter rather than the minted 1,000,000,000, the lost-wallet figure does not block the
+validators — only the initial numeric values in the config datum.
 
 ## 3. Build the validators
 
@@ -80,8 +96,10 @@ sidechain represents the locked amount (settled 2026-09-18 — see `corrected_hr
 That means the DAO's on-chain code depends on the bridge's locking validator, which **does not exist yet**.
 Settle the bridge design first or build against a placeholder.
 
-Also unresolved and load-bearing: **the amount of HRV actually remaining** after two wallets were lost. No
-governance parameter that references supply should be fixed until that is known.
+Also unresolved: **the amount of HRV actually remaining** after two wallets were lost. This no longer blocks
+the validators — see §2 — provided quorum and approval thresholds are expressed against a governance-set
+`voting_supply` parameter rather than against the minted 1,000,000,000. What it does block is the *initial
+value* of that parameter, which is set at deployment and can be corrected by governance afterwards.
 
 ## 7. Initial configuration
 

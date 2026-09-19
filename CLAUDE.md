@@ -129,25 +129,69 @@ same file with its `module.exports` commented out; the navbar and homepage linke
 doc's id is `introduction`. With `onBrokenLinks: 'throw'` those were fatal, so **`main` has never been
 buildable** — which also means the old `path: '.'` workflow could never have published a working site.
 
+## Decisions taken (2026-09-19) — the on-chain design
+
+Settled by the user. These were the questions `dao_deployment_steps.md` §2 listed as blocking all Aiken work.
+Full reasoning in `blockchain/harvest_dao_package/onchain_design.md`; `AGENTS.md` §3.2 has the summary.
+
+1. **Host ledger — Cardano.** Validators and DAO state live on Cardano, not the sidechain. HRV on the
+   sidechain is a representation of locked CNT, so sidechain governance would make the Node Handler set the
+   final authority over the treasury. The sidechain consumes governance decisions through the Chain Follower.
+2. **Treasury custody — Aiken validator plus M-of-N committee signatures.** The validator enforces the
+   proposal check (the proposal UTxO is spent in the same transaction, its datum says `Passed`, recipient and
+   amount match) and also requires committee signatures via `tx.extra_signatories`. Timelock via
+   `tx.validity_range`. A native script was rejected — it cannot read a datum or inspect a transaction, so it
+   can never tie a spend to a specific proposal.
+3. **Voting power — a snapshot committed in the proposal datum**, read directly by the validator. Frozen at
+   proposal creation, so transfers cannot alter a vote; nothing to trust at this electorate size. Merkle root
+   is the migration path once the map outgrows the transaction size limit.
+4. **On/off-chain split.** On-chain: proposal lifecycle, snapshot commitment, vote tally, treasury
+   authorisation, parameters. Off-chain: proposal text, snapshot construction, UI, reporting.
+5. **The Python spec contradicts itself, and this had not been noticed.** `proposal_manager.py` and
+   `voting_mechanism.py` each implement a complete voting system and disagree — notably,
+   `proposal_manager.start_voting()` creates a voting-power snapshot and `cast_vote()` then reads **live
+   balances** anyway, so a voter can move HRV after the snapshot and still vote the old weight. **Settled:**
+   port vote parameters and weighting from `voting_mechanism.py`, the lifecycle from `proposal_manager.py`,
+   and remove the duplicate vote paths.
+6. **`get_voting_power()` ignores the delegation amount.** `delegate(…, amount)` validates and records
+   `amount`; `get_voting_power()` then adds the delegator's *entire current balance* to the delegate. So
+   `min_delegation_amount = 1000` checks a number that is never used, and delegated power shifts
+   retroactively. Partial-versus-all-or-nothing is **still open** — see below.
+
+**Consequence:** quorum and approval must be expressed against a governance-set `voting_supply` parameter,
+**never against the minted 1,000,000,000**. That takes the lost-wallet figure off the critical path — it now
+affects only one parameter's initial value, not the validator logic. Aiken can be written.
+
 ## Still open
+
+The on-chain design is settled (above), so **nothing here blocks writing Aiken any more.**
 
 1. **Remaining HRV supply** — two wallets were lost after the mint, so the amount actually left has to be
    read off another computer. Related and undecided: the repo-root site states "lost wallets are treated as
-   burned, reducing supply", but nothing says how a lost wallet is reflected on-chain. **No governance
-   parameter that references supply should be fixed until this is known.**
+   burned, reducing supply", but nothing says how a lost wallet is reflected on-chain. It no longer blocks the
+   validators, only the initial value of the `voting_supply` parameter.
 2. **The QSTP request** — funding is to be fiat, but the roadmap previously specified ADA amounts. The
    amount and asset of the actual request must be restated before it is used for an application.
-3. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site
+3. **The treasury cannot hold fiat, and three documents say it does.** A Plutus validator can custody ADA and
+   native tokens; it cannot hold a bank balance. "The treasury" is therefore either an on-chain script holding
+   a converted asset or an off-chain entity the DAO records decisions about — and `corrected_hrv_valuation.md`,
+   `qstp_treasury_roadmap.md` and `updated_qstp_treasury_summary.md` all use the word without distinguishing
+   them. See `onchain_design.md` §C.
+4. **Two smaller design details** — the quorum denominator (a governance-set `voting_supply`, recommended,
+   versus the minted supply) and whether delegation is partial-amount or all-or-nothing. Both are argued in
+   `onchain_design.md` §D and §3.
+5. **`website/`** — the separate repo (`Gynode/HARVEST-Docusaurus-Site`) holding a *built* sidechain-era site
    with a whitepaper. Adding it as-is would create a gitlink with no `.gitmodules`; absorbing it would discard
    its history. It is ignored. Now that the repo-root site has been rewritten to the current direction, decide
    whether that whitepaper should be folded in, kept separate, or dropped.
-4. **On-chain design** — what belongs in a validator versus off-chain, the treasury custody model
-   (native script or Plutus validator), and the source of truth for voting power. See
-   `dao_deployment_steps.md` §2; these block writing any Aiken.
-5. **The push to `main` itself, and one Pages setting.** Nothing has been pushed. The workflow now builds the
-   site and pushes the output to the **`gh-pages` branch**, so the setting to change is
-   **Settings → Pages → Source: "Deploy from a branch" → Branch: `gh-pages` / `(root)`**. Until that changes,
-   Pages keeps serving `main` / `(root)`, which Jekyll renders as the repository README — not this site.
+6. **Aiken is not installed.** `aiken`, `cardano-cli` and `pnpm` were all still absent on 2026-09-19. Nothing
+   can be compiled or tested without them.
+7. **The push to `main`, and one Pages setting.** Everything is pushed — `main` is at `77d98a2`, and
+   `gh-pages` exists at `7e97f12`. **Verified again 2026-09-19:** `https://gynode.github.io/HARVEST/` still
+   serves the Jekyll-rendered repository markdown (links to `AGENTS.html` and `CLAUDE.html`, no Docusaurus
+   assets), so the repoint has not happened. The setting to change is **Settings → Pages → Source: "Deploy
+   from a branch" → Branch: `gh-pages` / `(root)`**. Until then Pages keeps serving `main` / `(root)`, which
+   Jekyll renders as the repository README — not this site.
 
 ## Conventions
 

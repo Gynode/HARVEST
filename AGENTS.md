@@ -3,7 +3,7 @@
 Read this before doing any work in this repository. It is the honest inventory: what HARVEST is, what
 actually exists on disk, and which documents in here cannot be trusted at face value.
 
-Last verified: **2026-09-18**, against the working tree at `C:\HARVEST`.
+Last verified: **2026-09-19**, against the working tree at `C:\HARVEST`.
 
 ---
 
@@ -177,30 +177,81 @@ notice for 3.x — a separate decision, not made here.
 **Nothing is implemented.** There is still no Plutus, Aiken or Haskell source in the repository — the contracts
 remain Python simulations, which cannot run on Cardano.
 
-### 3.2 Still open
+### 3.2 Settled 2026-09-19 — the on-chain design
+
+The five questions that blocked the Aiken work are answered. Full reasoning in
+`blockchain/harvest_dao_package/onchain_design.md`; `dao_deployment_steps.md` §2 is updated to match.
+
+| | Decision |
+|---|---|
+| **A. Host ledger** | **Cardano**, not the sidechain. HRV on the sidechain is a representation of locked CNT, so sidechain governance would make the Node Handler set the final authority over the treasury. The sidechain consumes governance decisions through the Chain Follower. |
+| **B. Which Python file is the spec** | **`voting_mechanism.py` for vote parameters and weighting** (per-type quorum and approval, quadratic where configured, power read at the snapshot block). **`proposal_manager.py` for the lifecycle only** — the open question below explains why. |
+| **1. On-chain / off-chain split** | On-chain: proposal lifecycle, snapshot commitment, vote tally, treasury authorisation, parameters. Off-chain: proposal text, snapshot construction, UI, reporting. |
+| **2. Treasury custody** | **Aiken validator *plus* M-of-N treasury-committee signatures** (`tx.extra_signatories`). The validator checks the proposal UTxO is spent in the same transaction, its datum says `Passed`, and recipient and amount match; the timelock is `tx.validity_range` against a deadline in the proposal datum. A native script was rejected: it cannot read a datum or inspect a transaction, so it can never tie a spend to a specific proposal. |
+| **3. Voting power** | **A snapshot committed in the proposal datum**, read directly by the validator — nothing to trust at this electorate size. Merkle root is the migration path once the map outgrows the transaction size limit. |
+
+**The specification contradicts itself, and this was not previously recorded.** `proposal_manager.py` and
+`voting_mechanism.py` are not two halves of one system — each is a complete voting implementation, and they
+disagree. `proposal_manager.start_voting()` creates a voting-power snapshot and `cast_vote()` then reads
+**live balances** anyway, so under that file a voter can move HRV after the snapshot and still vote the old
+weight; quorum and approval are fixed constants there and per-proposal-type in the other file. There is no
+single behaviour to port from both. **Resolution:** port vote parameters and weighting from
+`voting_mechanism.py` (it honours the snapshot it creates) and the lifecycle from `proposal_manager.py`, then
+remove the duplicate vote paths from `proposal_manager.py` so one specification remains.
+
+**A second spec defect:** `governance_token.delegate(delegator, delegate, amount)` validates and records
+`amount`, then `get_voting_power()` ignores it — it adds the delegator's *entire current balance* to the
+delegate. So delegation is all-or-nothing in effect, the `min_delegation_amount = 1000` check applies to a
+number that is never used, and delegated power changes retroactively when the delegator's balance moves.
+Whether delegation should be partial-amount or all-or-nothing is open — see §3.3.
+
+**Consequence for the roadmap:** quorum and approval thresholds must be expressed against a governance-set
+`voting_supply` parameter, **never against the minted 1,000,000,000**. That removes the lost-wallet supply
+figure from the critical path: it now affects only the initial value of one parameter, not the validator
+logic.
+
+### 3.3 Still open
 
 Do not resolve any of these by assumption.
 
 1. **Remaining HRV supply.** Two wallets were lost after the mint, so the amount actually left has to be read
    off another computer. Related and undocumented: the repo-root site states "lost wallets are treated as
    burned, reducing supply", but nothing in the sidechain docs says how a lost wallet is reflected on-chain.
+   **This no longer blocks the validators** — see §3.2 and `onchain_design.md` §D — only the initial value
+   of the `voting_supply` parameter, which governance can correct later.
 2. **The QSTP request.** Funding is to be fiat, but `qstp_treasury_roadmap.md` previously specified ADA
    amounts (100,000 ADA / "$100,000 worth of ADA"). The amount and asset of the actual request must be
    restated before the document is used for an application. Note also that earlier drafts ran together two
    different funding routes — Project Catalyst (development costs) and QSTP (treasury backing).
-3. **On-chain design.** What belongs in a validator versus off-chain; whether treasury custody is a Cardano
-   native script or a Plutus validator; and where voting power's source of truth lives (a snapshot datum, or a
-   validator reading the holder's UTxO). See `dao_deployment_steps.md` §2. All of these block writing any
-   Aiken.
-4. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*
+3. **The treasury cannot hold fiat, and three documents say it does.** A Plutus validator and a Cardano
+   native script can custody ADA and native tokens; neither can hold a bank balance. So "the treasury" is
+   either an on-chain script holding a converted asset, or an off-chain entity whose decisions the DAO
+   records — and `corrected_hrv_valuation.md`, `qstp_treasury_roadmap.md` and
+   `updated_qstp_treasury_summary.md` all use the word without distinguishing them. See `onchain_design.md`
+   §C.
+4. **The quorum denominator, and the delegation rule.** Both are argued in `onchain_design.md` §D and §3 but
+   not confirmed: whether quorum is a share of a governance-set `voting_supply` (recommended) or of the
+   minted supply, and whether delegation is partial-amount or all-or-nothing. The Python `delegate()` takes
+   an `amount` and then ignores it, so neither rule exists in the specification today.
+5. **`website/`** — the separate repository (`Gynode/HARVEST-Docusaurus-Site`) holding a *built*
    sidechain-era site with a whitepaper. Adding it to this repo as-is would create a gitlink with no
    `.gitmodules`; absorbing it means deleting `website/.git` and discarding that history. Neither was done —
    it is ignored. Now that the repo-root site has been rewritten, decide whether `website/`'s whitepaper
    content should be folded into it, kept separate, or dropped.
-5. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
+7. **`treasury_manager.py`'s demo still claims a funded treasury.** Its `__main__` block prints a **$47.5M
+   treasury** — 300,000,000 HRV at $0.10, 10M USDC, 5M ADA at $0.50, 5M DAI — with Compound and Yearn yield
+   strategies and an `AssetType.LP_TOKEN`. Every part of that contradicts settled decisions: the treasury is
+   unfunded, HRV has no value, and DAI/Compound/Yearn are not on Cardano. The documents were corrected on
+   2026-09-18; this demo block was missed, so running the contract as §4 instructs still prints a funded
+   treasury with a price. `onchain_design.md` gives the fix: reduce the demo to the true configuration and
+   drop the non-Cardano assets.
+8. **The push to `main`, and one Pages setting.** The workflow is verified locally end to end: `npm ci &&
    npm run build` succeeds on Node 20, the built site serves, and the publish step was simulated against a
    local bare repository (77 files, `.nojekyll` included, `gh-pages` receiving a valid site root). It has never
-   run in Actions. The Pages source must also be repointed from `main` to `gh-pages` — see §5.
+   run in Actions. **Verified again 2026-09-19 against the live site:** `https://gynode.github.io/HARVEST/`
+   still serves the Jekyll-rendered repository markdown (links to `AGENTS.html` and `CLAUDE.html`, no
+   Docusaurus assets), so the repoint has not happened. The Pages source must be moved from `main` to
+   `gh-pages` — see §5.
 
 ---
 
@@ -261,14 +312,18 @@ best treated as the *behavioural specification* — governance, delegation, voti
 proposal lifecycle, treasury approvals — to be reimplemented in Plutus (Haskell) or Aiken. Nothing written in
 Python will execute on Cardano.
 
-The documents have now been brought into line with the settled decisions (§3.1). If you are picking up
-development, the starting points are:
+The documents are now in line with the settled decisions (§3.1, §3.2). **The on-chain design is settled, so
+Aiken can be written** — that was the gate. The starting points are:
 
-1. **Find the remaining HRV supply** (§3.2, item 1). Two wallets are lost and no governance parameter that
-   references supply can be fixed until that is known.
-2. **Settle the on-chain design** (§3.2, item 3) — validator/off-chain split, treasury custody, and the source
-   of truth for voting power. This blocks writing any Aiken.
-3. **Write the validators in Aiken**, porting the behaviour from the Python specification rather than
-   translating the Python.
-4. **Build outward**: the bridge locking validator first (nothing touching HRV works without it), then node
-   software, P2P, storage, and the Chain Follower.
+1. **Install Aiken.** It is not on this machine (`aiken`, `cardano-cli` and `pnpm` were all still missing on
+   2026-09-19). Nothing in step 2 can be compiled or tested without it.
+2. **Write the validators in Aiken**, porting the behaviour from the Python specification rather than
+   translating the Python. Per §3.2, port vote parameters from `voting_mechanism.py` and the lifecycle from
+   `proposal_manager.py`, and do not reproduce `get_voting_power()`'s delegation bug.
+3. **Build in this order**: the **bridge locking validator** first — the sidechain's HRV is a representation
+   of locked CNT, so nothing touching HRV works without it and its design is already settled — then the
+   governance validator, the treasury validator, and the parameter/config validator. Then node software,
+   P2P, storage, and the Chain Follower.
+4. **Somewhere along the way, two smaller jobs:** find the remaining HRV supply (§3.3, item 1 — no longer
+   blocking, but the `voting_supply` parameter wants a real number), and fix `treasury_manager.py`'s demo,
+   which still prints a funded $47.5M treasury with EVM assets and an HRV price (§3.3, item 7).

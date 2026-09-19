@@ -101,7 +101,31 @@ documentation) as complete.
 Treat all of it as specification, never as evidence of a working system. `cardano_sidechain_research.md` is
 the exception — it is a genuine summary of how Cardano sidechains and PoA actually work, and is accurate.
 
-### 2.5 The websites — two trees
+### 2.5 `blockchain/harvest-onchain/` — the Aiken project (new, 2026-09-19)
+
+**The first real on-chain code in the repository** — the only code here that can actually execute on Cardano.
+Created 2026-09-19 with `aiken new`, once `onchain_design.md` had settled what to write.
+
+| Path | What it is |
+|------|-----------|
+| `aiken.toml` | `gynode/harvest-onchain`, compiler `v1.1.23`, Plutus `v3`, depends on `aiken-lang/stdlib` `v3.1.0` |
+| `lib/harvest/types.ak` | Shared types: `ProposalType`, `ProposalStatus`, `VoteChoice`, `VotingType`, `VotingParameters`, `VotingPower`, `Snapshot`, `Tally`, `ProposalDatum`, `Funding` |
+| `lib/harvest/voting.ak` | The voting rules ported from `voting_mechanism.py`, with 17 tests |
+| `validators/` | **Empty.** The scaffold's `placeholder.ak` was deleted — it was a `todo` stub, and the point now is real code |
+
+**Deviation from the scaffold worth knowing:** `aiken new` also wrote
+`.github/workflows/continuous-integration.yml` inside the project. GitHub only runs workflows from the
+repository root's `.github/workflows/`, so that file is inert — it would need moving to
+`.github/workflows/` at the root to do anything.
+
+Deliberate departures from the Python specification in `voting.ak`, both recorded in its header comment:
+**no floats** (percentages are integers and approval is compared by cross-multiplication, which is exact),
+and **quorum divides by `voting_supply`, never the minted `total_supply`** — the fix for §3.2's item D.
+
+Also checked and worth knowing before planning the Merkle migration: **`aiken-lang/stdlib` v3.1.0 has no
+Merkle tree module**, so that path means writing the tree and its proofs by hand.
+
+### 2.6 The websites — two trees
 
 - **Repo root** (`docs/`, `src/`, `static/`, `docusaurus.config.js`, `package.json`, `sidebars.js`) — a
   Docusaurus **source** site (Docusaurus `2.0.0-beta.18`, React 17), built and deployed to `gh-pages`.

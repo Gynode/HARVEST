@@ -60,6 +60,7 @@ Phases 1–6 as complete. **None of that reflects working software.** What actua
 
 | Path | What it is |
 |------|-----------|
+| `blockchain/harvest-onchain/` | **The Aiken project — the only on-chain code that will ever run on Cardano.** Created 2026-09-19. `lib/harvest/` holds `types.ak` and `voting.ak`; `validators/` is still empty. `build/` is gitignored. |
 | `blockchain/blockchain_code/` | Python prototypes: `core_components/`, `smart_contracts/`, `tools/` |
 | `blockchain/harvest_dao_package/` | The DAO package — contracts, React interface, deployment steps, QSTP treasury docs |
 | `blockchain/development_plan/` | Architecture, roadmap, Cardano sidechain research, `todo.md` |

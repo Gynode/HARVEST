@@ -259,11 +259,11 @@ the eUTxO constraint above: **a validator cannot see how much HRV an address hol
 |--------|--------------|---------|
 | **3a. Live UTxO read** — power = HRV in the vote transaction's inputs | No snapshot needed; trivially verifiable | The voter must spend **every** HRV UTxO they own in the vote, or their power is understated. Power can be borrowed and returned within the single atomic transaction. Power changes mid-vote. Addresses that voted can be re-funded and vote again unless the tally tracks voters. |
 | **3b. Snapshot committed on-chain** — at proposal creation, the power set is frozen and its commitment stored in the proposal datum; the vote validator reads it | Matches the spec's intent (`create_voting_snapshot` exists in both files); power is fixed for the proposal's life; token transfers cannot alter a vote | Someone must construct the snapshot off-chain, so the commitment has to be verified, not trusted |
-| **3c. Merkle root** — 3b, with the snapshot as a Merkle root and each voter supplying a proof | Same guarantees as 3b at any scale, and a voter's power stays private | More machinery; a voter needs a proof to vote, so a proof service must exist |
+| **3c. Merkle root** — 3b, with the snapshot as a Merkle root and each voter supplying a proof | Same guarantees as 3b at any scale, and a voter's power stays private | More machinery; a voter needs a proof to vote, so a proof service must exist. **Checked 2026-09-19: `aiken-lang/stdlib` v3.1.0 has no Merkle tree module** — the tree and its proofs would have to be written by hand, which makes this migration meaningfully more expensive than it first appeared |
 
 **Adopted: 3b now, 3c when scale demands it.** The electorate today is the Node Handlers plus a small
 holder set, so an explicit `{address → power}` map in the proposal datum is simplest and fully verifiable —
-and Aiken's stdlib has a Merkle tree module for when the map outgrows the transaction size limit. The datum
+and a hand-rolled Merkle tree is the answer when the map outgrows the transaction size limit. The datum
 shape should be chosen once, with that migration in mind.
 
 **How the commitment is verified** — this is the part that has to be got right, because an unverified

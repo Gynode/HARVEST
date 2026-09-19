@@ -65,19 +65,34 @@ blocks the Aiken work any more.**
 
 ## 3. Build the validators
 
-```bash
-aiken new harvest_dao
-cd harvest_dao
+**The project exists as of 2026-09-19** — at `blockchain/harvest-onchain/`, not `harvest_dao/`. It is
+`gynode/harvest-onchain` on Aiken `v1.1.23`, Plutus `v3`, with `aiken-lang/stdlib` `v3.1.0`.
 
-# the validators live in validators/
+```bash
+cd blockchain/harvest-onchain
+
+# the validators live in validators/ — nothing there yet
 aiken build      # compiles; emits plutus.json (CIP-57 blueprint)
 aiken check      # runs the test blocks
 aiken fmt
 ```
 
-Port the behaviour from the Python specification: delegation and voting power (`governance_token.py`),
-proposal lifecycle and Node Handler review (`proposal_manager.py`), quadratic voting with quorum
-(`voting_mechanism.py`), and multi-signature treasury with timelocks (`treasury_manager.py`).
+What exists so far:
+
+- `lib/harvest/types.ak` — the shared types (proposal, snapshot, tally, voting parameters).
+- `lib/harvest/voting.ak` — the voting rules from `voting_mechanism.py`: per-type default parameters,
+  quadratic/weighted/linear weighting, quorum, approval, tallying. **17 tests, all passing.**
+
+**Two deliberate departures from the Python, both documented in the module.** There are no floats on-chain,
+so percentages are integers and approval is a cross-multiplication (`yes * 100 >= approval_percent *
+(yes + no)`) — exact, rather than the Python's float comparison. And quorum divides by `voting_supply`, not
+the minted `total_supply`, per §2 above.
+
+Port the rest of the behaviour from the Python specification: delegation and voting power
+(`governance_token.py`), proposal lifecycle and Node Handler review (`proposal_manager.py`), quadratic voting
+with quorum (`voting_mechanism.py`), and multi-signature treasury with timelocks (`treasury_manager.py`).
+Per `onchain_design.md` §B, **`voting_mechanism.py` is the specification for vote parameters and weighting,
+`proposal_manager.py` for the lifecycle only** — they are two complete implementations and they disagree.
 
 The Python files are useful as *behaviour* — they are typed, readable, and each has a working demo. Port the
 rules, not the code.
@@ -107,7 +122,20 @@ The sidechain does not mint its own HRV. The CNT is locked on Cardano mainnet un
 sidechain represents the locked amount (settled 2026-09-18 — see `corrected_hrv_valuation.md`).
 
 That means the DAO's on-chain code depends on the bridge's locking validator, which **does not exist yet**.
-Settle the bridge design first or build against a placeholder.
+
+**But the claim that the bridge must be designed first does not survive contact with the two designs.**
+`onchain_design.md` settles the *DAO's* design thoroughly; it says nothing about the bridge's, and nothing
+anywhere in the repository does. Who may release a locked CNT, what authorises a release, whether the
+sidechain's Node Handlers sign for it, what the representation token is, and how a lock on mainnet becomes
+visible to the sidechain are all unanswered. So "settle the bridge design first" means *designing it*, not
+following a settled design — and the DAO validators, whose design is settled and whose specification exists,
+are the piece that can actually be built today.
+
+The dependency also runs less deep than this section implies. The HRV CNT already exists on Cardano mainnet,
+which is where the DAO now lives (§2), so the governance and treasury validators can be written against the
+real CNT policy id without the bridge existing. The bridge matters to whether **locked** HRV can vote —
+which is a question worth settling before the snapshot logic is wired to anything, since locked HRV is, by
+construction, not in any holder's UTxOs.
 
 Also unresolved: **the amount of HRV actually remaining** after two wallets were lost. This no longer blocks
 the validators — see §2 — provided quorum and approval thresholds are expressed against a governance-set

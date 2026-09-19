@@ -1,0 +1,14 @@
+{
+  "preamble": {
+    "title": "gynode/harvest-onchain",
+    "description": "Aiken contracts for project 'gynode/harvest-onchain'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.23+8949565"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": []
+}
